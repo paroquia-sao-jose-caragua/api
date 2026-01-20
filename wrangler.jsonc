@@ -30,8 +30,8 @@
   "d1_databases": [
     {
       "binding": "DB",
-      "database_name": "parish_db_dev",
-      "database_id": "DUMMY_ID_FOR_LOCAL_DEV",
+      "database_name": "parish_db",
+      "database_id": "de8f3f32-7273-4a5d-988a-f9d93ef35a53",
     },
   ],
   // "ai": {
