@@ -21,6 +21,10 @@ export class AuthenticateUseCase {
   }: AuthenticateUseCaseRequest): Promise<AuthenticateUseCaseResponse> {
     const user = await this.usersDaf.findByEmail(email);
 
+    console.log('User fetched from database:', {
+      user: user ? { id: user.id, email: user.email } : null,
+    });
+
     if (!user) {
       throw new InvalidCredentialsError();
     }

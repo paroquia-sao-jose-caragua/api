@@ -71,6 +71,7 @@ CREATE INDEX IF NOT EXISTS idx_pastorals_slug ON pastorals(slug);
 CREATE TABLE IF NOT EXISTS blog_categories (
   id VARCHAR(26) PRIMARY KEY NOT NULL,
   name VARCHAR(50) UNIQUE NOT NULL,
+  slug VARCHAR(255) UNIQUE NOT NULL,
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
   updated_at DATETIME
 );
@@ -210,7 +211,7 @@ CREATE INDEX IF NOT EXISTS idx_mass_schedules_day_week ON mass_schedules(day_of_
 CREATE INDEX IF NOT EXISTS idx_mass_schedules_day_month ON mass_schedules(day_of_month) WHERE day_of_month IS NOT NULL;
 
 CREATE INDEX IF NOT EXISTS idx_mass_schedule_times_schedule ON mass_schedule_times(schedule_id);
-CREATE INDEX IF NOT EXISTS idx_mass_schedule_times_time ON mass_schedule_times(time);
+CREATE INDEX IF NOT EXISTS idx_mass_schedule_times_start_time ON mass_schedule_times(start_time);
 
 CREATE TABLE IF NOT EXISTS mass_schedule_exceptions (
   id VARCHAR(26) PRIMARY KEY NOT NULL,
@@ -246,9 +247,9 @@ CREATE TABLE IF NOT EXISTS event_schedules (
   FOREIGN KEY (community_id) REFERENCES communities(id) ON DELETE CASCADE
 );
 
-CREATE INDEX IF NOT EXISTS idx_events_community ON events(community_id);
-CREATE INDEX IF NOT EXISTS idx_events_date ON events(event_date);
-CREATE INDEX IF NOT EXISTS idx_events_datetime ON events(event_date, start_time);
+CREATE INDEX IF NOT EXISTS idx_event_schedules_community ON event_schedules(community_id);
+CREATE INDEX IF NOT EXISTS idx_event_schedules_date ON event_schedules(event_date);
+CREATE INDEX IF NOT EXISTS idx_event_schedules_datetime ON event_schedules(event_date, start_time);
 
 CREATE TABLE IF NOT EXISTS migrations (
   id INTEGER PRIMARY KEY AUTOINCREMENT,

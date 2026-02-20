@@ -6,7 +6,7 @@ import {
 } from 'serverless-crypto-utils/access-token';
 
 export const refresh: ControllerFn = async (c) => {
-  const { user, t } = getAppContext(c);
+  const { t } = getAppContext(c);
 
   const refreshToken = getCookie(c, 'refreshToken');
 
@@ -34,6 +34,22 @@ export const refresh: ControllerFn = async (c) => {
     );
   }
 
+  const data = JSON.parse(refreshResult.data) as { user?: unknown };
+  const user = data.user;
+
+  if (!user) {
+    return c.json(
+      {
+        error: t('invalid-refresh-token-or-expired'),
+      },
+      401,
+    );
+  }
+
+  const isProduction = c.env.ENVIRONMENT === 'production';
+  const isHttps = new URL(c.req.url).protocol === 'https:';
+  const secure = isProduction || isHttps;
+
   const token = await createAccessToken({
     encryptionSecret: c.env.ENCRYPTION_SECRET,
     signingSecret: c.env.SIGNING_SECRET,
@@ -54,8 +70,9 @@ export const refresh: ControllerFn = async (c) => {
 
   setCookie(c, 'refreshToken', newRefreshToken, {
     httpOnly: true,
-    secure: true,
-    sameSite: 'strict',
+    secure,
+    sameSite: secure ? 'none' : 'lax',
+    path: '/',
     maxAge: 60 * 60 * 24 * 7, // 7 days
   });
 

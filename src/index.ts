@@ -1,5 +1,6 @@
 import { Hono } from 'hono';
 import { health } from './http/controllers/health';
+import { corsSetup } from './http/middlewares/corsSetup';
 import { parseBody } from './http/middlewares/parseBody';
 import { withDictionary } from './http/middlewares/withDictionary';
 import { onAppError } from './http/middlewares/onAppError';
@@ -16,7 +17,7 @@ const app = new Hono<{ Bindings: Bindings; Variables: Variables }>();
 app.get('/health', health);
 app.route('/', docsRoutes);
 
-app.use(withDictionary, parseBody);
+app.use(corsSetup, withDictionary, parseBody);
 
 app.route('/', userRoutes);
 app.route('/', attachmentsRoutes);

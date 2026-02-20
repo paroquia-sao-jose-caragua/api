@@ -7,6 +7,7 @@
   "compatibility_flags": ["nodejs_compat"],
   "vars": {
     "ENVIRONMENT": "development",
+    "PANEL_BASE_URL": "http://localhost:3000",
   },
   "workers_dev": true,
   "dev": {
@@ -31,7 +32,7 @@
     {
       "binding": "DB",
       "database_name": "parish_db",
-      "database_id": "de8f3f32-7273-4a5d-988a-f9d93ef35a53",
+      "database_id": "3ce50dd3-f719-4e4e-b08a-242326cb7e0f",
     },
   ],
   // "ai": {
@@ -40,5 +41,5 @@
   // "observability": {
   //   "enabled": true,
   //   "head_sampling_rate": 1
-  // }
+  // },
 }
