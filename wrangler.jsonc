@@ -44,7 +44,7 @@
       },
       "vars": {
         "ENVIRONMENT": "staging",
-        "PANEL_BASE_URL": "https://staging-panel.paroquiasaojosecaragua.com.br",
+        "PANEL_BASE_URL": "https://panel-staging.paroquiasaojosecaragua.com.br",
       },
       "d1_databases": [
         {
