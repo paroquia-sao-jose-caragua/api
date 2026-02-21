@@ -42,9 +42,8 @@ export const authenticate: ControllerFn = async (c) => {
       expiresInSeconds: 60 * 60 * 24 * 7, // 7 days
     });
 
-    const isProduction = c.env.ENVIRONMENT === 'production';
     const isHttps = new URL(c.req.url).protocol === 'https:';
-    const secure = isProduction || isHttps;
+    const secure = isHttps;
 
     setCookie(c, 'refreshToken', refreshToken, {
       httpOnly: true,
@@ -52,6 +51,7 @@ export const authenticate: ControllerFn = async (c) => {
       sameSite: secure ? 'none' : 'lax',
       path: '/',
       maxAge: 60 * 60 * 24 * 7, // 7 days
+      domain: secure ? 'localhost' : '.paroquiasaojosecaragua.com.br',
     });
 
     return c.json({ token });

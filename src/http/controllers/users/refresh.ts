@@ -46,9 +46,8 @@ export const refresh: ControllerFn = async (c) => {
     );
   }
 
-  const isProduction = c.env.ENVIRONMENT === 'production';
   const isHttps = new URL(c.req.url).protocol === 'https:';
-  const secure = isProduction || isHttps;
+  const secure = isHttps;
 
   const token = await createAccessToken({
     encryptionSecret: c.env.ENCRYPTION_SECRET,
@@ -74,6 +73,7 @@ export const refresh: ControllerFn = async (c) => {
     sameSite: secure ? 'none' : 'lax',
     path: '/',
     maxAge: 60 * 60 * 24 * 7, // 7 days
+    domain: secure ? 'localhost' : '.paroquiasaojosecaragua.com.br',
   });
 
   return c.json({ token });
