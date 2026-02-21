@@ -14,8 +14,9 @@
   "d1_databases": [
     {
       "binding": "DB",
-      "database_name": "parish_db",
-      "database_id": "de8f3f32-7273-4a5d-988a-f9d93ef35a53",
+      "database_name": "parish-db-dev",
+      "database_id": "86f78553-d37b-4561-b2ac-a3241d8f4ff8",
+      "remote": false,
     },
   ],
   "dev": {
@@ -41,8 +42,9 @@
       "d1_databases": [
         {
           "binding": "DB",
-          "database_name": "staging_parish_db",
-          "database_id": "3e679652-275a-4818-8ef6-38664e2c2deb",
+          "database_name": "parish-db-staging",
+          "database_id": "d385a52e-01cd-43a5-8346-785cd0c54516",
+          "remote": true,
         },
       ],
     },
@@ -62,8 +64,9 @@
       "d1_databases": [
         {
           "binding": "DB",
-          "database_name": "parish_db",
-          "database_id": "de8f3f32-7273-4a5d-988a-f9d93ef35a53",
+          "database_name": "parish-db",
+          "database_id": "c19f087c-2002-42c4-818c-8eebaac61213",
+          "remote": true,
         },
       ],
     },
