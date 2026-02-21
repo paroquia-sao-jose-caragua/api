@@ -22,19 +22,6 @@
   //     "id": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
   //   }
   // ],
-  "r2_buckets": [
-    {
-      "binding": "R2_BUCKET",
-      "bucket_name": "parish-attachments-dev",
-    },
-  ],
-  "d1_databases": [
-    {
-      "binding": "DB",
-      "database_name": "dev_parish_db",
-      "database_id": "3ce50dd3-f719-4e4e-b08a-242326cb7e0f",
-    },
-  ],
   // "ai": {
   //   "binding": "AI"
   // },
