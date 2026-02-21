@@ -31,7 +31,7 @@
   "d1_databases": [
     {
       "binding": "DB",
-      "database_name": "parish_db",
+      "database_name": "dev_parish_db",
       "database_id": "3ce50dd3-f719-4e4e-b08a-242326cb7e0f",
     },
   ],
