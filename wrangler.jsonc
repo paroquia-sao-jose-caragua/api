@@ -1,6 +1,6 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "api-dev",
+  "name": "api",
   "main": "src/index.ts",
   "compatibility_date": "2025-09-27",
   "account_id": "309e86d52409580e543ecf949c110d4d",
