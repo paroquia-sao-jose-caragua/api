@@ -41,6 +41,7 @@ declare global {
     ERROR_LOGGER_API_URL: string;
 
     // Site URLs
+    DOMAIN: string;
     PANEL_BASE_URL: string;
     SITE_BASE_URL: string;
 

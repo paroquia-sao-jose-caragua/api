@@ -8,6 +8,7 @@
   "workers_dev": false,
   "preview_urls": false,
   "vars": {
+    "DOMAIN": "localhost",
     "ENVIRONMENT": "development",
     "PANEL_BASE_URL": "http://localhost:3000",
   },
@@ -39,12 +40,13 @@
       "preview_urls": false,
       "route": {
         "custom_domain": true,
-        "pattern": "api-staging.paroquiasaojosecaragua.com.br",
-        "zone_name": "paroquiasaojosecaragua.com.br",
+        "pattern": "api-staging.paroquiasaojosecaragua.org.br",
+        "zone_name": "paroquiasaojosecaragua.org.br",
       },
       "vars": {
+        "DOMAIN": ".paroquiasaojosecaragua.org.br",
         "ENVIRONMENT": "staging",
-        "PANEL_BASE_URL": "https://panel-staging.paroquiasaojosecaragua.com.br",
+        "PANEL_BASE_URL": "https://panel-staging.paroquiasaojosecaragua.org.br",
       },
       "d1_databases": [
         {
@@ -68,12 +70,13 @@
       "preview_urls": false,
       "route": {
         "custom_domain": true,
-        "pattern": "api.paroquiasaojosecaragua.com.br",
-        "zone_name": "paroquiasaojosecaragua.com.br",
+        "pattern": "api.paroquiasaojosecaragua.org.br",
+        "zone_name": "paroquiasaojosecaragua.org.br",
       },
       "vars": {
+        "DOMAIN": ".paroquiasaojosecaragua.org.br",
         "ENVIRONMENT": "production",
-        "PANEL_BASE_URL": "https://panel.paroquiasaojosecaragua.com.br",
+        "PANEL_BASE_URL": "https://panel.paroquiasaojosecaragua.org.br",
       },
       "d1_databases": [
         {
