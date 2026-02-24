@@ -29,15 +29,15 @@ Para rodar este Worker localmente, você precisa configurar as variáveis de amb
    b. Wrangler CLI instalado globalmente: npm install -g wrangler
    c. Uma conta na Cloudflare com os seguintes recursos criados:
 
-   - Um D1 Database (Nome sugerido: paroquia_db).
-   - Um KV Namespace (Nome sugerido: PAROQUIA_CONTENT).
+   - Um D1 Database (Nome sugerido: paroquia-db).
+   - Um KV Namespace (Nome sugerido: paroquia-storage).
 
 2. Configuração do Projeto
    a. Clone este repositório:
 
    ```bash
-   git clone https://github.com/SEU_USER/paroquia-api-worker.git
-   cd paroquia-api-worker
+   git clone https://github.com/SEU_USER/api.git
+   cd api
    ```
 
    b. Instale as dependências:
@@ -62,11 +62,9 @@ Para rodar este Worker localmente, você precisa configurar as variáveis de amb
    wrangler dev
    ```
 
-## Rotas Principais (Endpoints)
+## Rotas (Endpoints)
 
-- `POST /login`: Autenticação de administradores.
-- `POST /logout`: Encerrar sessão.
-- `GET /admin`: Obter detalhes do administrador autenticado.
+Visualize a API completa no endereço: [https://api.paroquiasaojosecaragua.org.br/docs](https://api.paroquiasaojosecaragua.org.br/docs)
 
 ## Licença
 
