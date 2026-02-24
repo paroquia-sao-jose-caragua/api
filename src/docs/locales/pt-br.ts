@@ -34,7 +34,7 @@ export const openApiSpec = {
       description: 'Desenvolvimento - Ambiente Local',
     },
     {
-      url: 'https://api.paroquiasaojosecaraguatatuba.workers.dev',
+      url: 'https://staging-api.paroquiasaojosecaragua.org.br',
       description: 'Staging - Ambiente de Testes',
     },
   ],
