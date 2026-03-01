@@ -22,6 +22,7 @@ export const authenticate: ControllerFn = async (c) => {
       payload: {
         user: {
           id: user.id,
+          name: user.name,
           email: user.email,
           role: user.role,
         },
@@ -35,6 +36,7 @@ export const authenticate: ControllerFn = async (c) => {
       payload: {
         user: {
           id: user.id,
+          name: user.name,
           email: user.email,
           role: user.role,
         },
@@ -54,7 +56,14 @@ export const authenticate: ControllerFn = async (c) => {
       domain: c.env.DOMAIN,
     });
 
-    return c.json({ token });
+    return c.json({
+      token,
+      user: {
+        name: user.name,
+        email: user.email,
+        role: user.role,
+      },
+    });
   } catch (err) {
     if (err instanceof InvalidCredentialsError) {
       return c.json({ message: t('invalid-email-or-password') }, 400);

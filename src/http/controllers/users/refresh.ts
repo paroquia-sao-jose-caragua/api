@@ -1,3 +1,4 @@
+import type { User } from '@/entities/user';
 import { getAppContext } from '@/http/utils/getAppContext';
 import { getCookie, setCookie } from 'hono/cookie';
 import {
@@ -34,7 +35,7 @@ export const refresh: ControllerFn = async (c) => {
     );
   }
 
-  const data = JSON.parse(refreshResult.data) as { user?: unknown };
+  const data = JSON.parse(refreshResult.data) as { user: User };
   const user = data.user;
 
   if (!user) {
@@ -76,5 +77,12 @@ export const refresh: ControllerFn = async (c) => {
     domain: c.env.DOMAIN,
   });
 
-  return c.json({ token });
+  return c.json({
+    token,
+    user: {
+      name: user.name,
+      email: user.email,
+      role: user.role,
+    },
+  });
 };
