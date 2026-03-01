@@ -12,11 +12,12 @@ export class D1UserDAF implements UsersDAF {
   async findByEmail(email: string) {
     const user = await this.d1
       .prepare(
-        'SELECT id, email, password_hash, role FROM users WHERE email = ?',
+        'SELECT id, name, email, password_hash, role FROM users WHERE email = ?',
       )
       .bind(email)
       .first<{
         id: string;
+        name: string;
         email: string;
         password_hash: string;
         role: 'admin' | 'user' | 'viewer';
@@ -28,6 +29,7 @@ export class D1UserDAF implements UsersDAF {
 
     return {
       id: user.id,
+      name: user.name,
       email: user.email,
       passwordHash: user.password_hash,
       role: user.role,
@@ -36,11 +38,13 @@ export class D1UserDAF implements UsersDAF {
 
   async create({
     id,
+    name,
     email,
     passwordHash,
     role,
   }: {
     id: string;
+    name: string;
     email: string;
     passwordHash: string;
     role: 'admin' | 'user' | 'viewer';
@@ -48,14 +52,15 @@ export class D1UserDAF implements UsersDAF {
     const user = await this.d1
       .prepare(
         `
-        INSERT INTO users (id, email, password_hash, role) 
-        VALUES (?, ?, ?, ?) 
-        RETURNING id, email, password_hash, role
+        INSERT INTO users (id, name, email, password_hash, role) 
+        VALUES (?, ?, ?, ?, ?) 
+        RETURNING id, name, email, password_hash, role
       `,
       )
       .bind(id, email, passwordHash, role)
       .first<{
         id: string;
+        name: string;
         email: string;
         password_hash: string;
         role: 'admin' | 'user' | 'viewer';
@@ -69,6 +74,7 @@ export class D1UserDAF implements UsersDAF {
 
     return {
       id: user.id,
+      name: user.name,
       email: user.email,
       passwordHash: user.password_hash,
       role: user.role,

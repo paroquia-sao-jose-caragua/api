@@ -4,6 +4,7 @@ export interface UsersDAF {
   findByEmail(email: string): Promise<User | null>;
   create(user: {
     id: string;
+    name: string;
     email: string;
     passwordHash: string;
     role: 'admin' | 'user' | 'viewer';
