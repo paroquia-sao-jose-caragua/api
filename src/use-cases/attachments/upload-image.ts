@@ -38,6 +38,7 @@ export class UploadImageUseCase {
     await this.imagesDam.upload({
       file,
       filename,
+      attachmentId,
     });
 
     await this.attachmentsDaf.create({

@@ -11,8 +11,11 @@ import { docsRoutes } from './http/controllers/docs/routes';
 import { pastoralsRoutes } from './http/controllers/pastorals/routes';
 import { clergyRoutes } from './http/controllers/clergy/routes';
 import { blogRoutes } from './http/controllers/blog/routes';
+import { notFound } from './http/controllers/notFound';
 
-const app = new Hono<{ Bindings: Bindings; Variables: Variables }>();
+const app = new Hono<{ Bindings: Bindings; Variables: Variables }>({
+  strict: false,
+});
 
 app.get('/health', health);
 app.route('/', docsRoutes);
@@ -26,6 +29,7 @@ app.route('/', pastoralsRoutes);
 app.route('/', clergyRoutes);
 app.route('/', blogRoutes);
 
+app.notFound(notFound);
 app.onError(onAppError);
 
 export default app;

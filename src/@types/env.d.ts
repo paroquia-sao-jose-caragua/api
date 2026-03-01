@@ -39,6 +39,7 @@ declare global {
     // API URLs
     BASE_API_URL: string;
     ERROR_LOGGER_API_URL: string;
+    S3_API_URL: string;
 
     // Site URLs
     DOMAIN: string;
