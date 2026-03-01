@@ -57,7 +57,7 @@ export class D1UserDAF implements UsersDAF {
         RETURNING id, name, email, password_hash, role
       `,
       )
-      .bind(id, email, passwordHash, role)
+      .bind(id, name, email, passwordHash, role)
       .first<{
         id: string;
         name: string;
