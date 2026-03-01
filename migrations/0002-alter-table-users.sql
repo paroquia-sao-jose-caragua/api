@@ -1,5 +1,5 @@
 ALTER TABLE users
-ADD COLUMN IF NOT EXISTS name VARCHAR(255) NOT NULL;
+ADD COLUMN name VARCHAR(255);
 
 INSERT INTO migrations (id, name, description, author) 
 VALUES (2, '0002-alter-table-users', 'Alter users table, add name column', 'Giselle Hoekveld Silva')
