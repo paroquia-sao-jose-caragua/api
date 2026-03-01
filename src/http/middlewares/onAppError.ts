@@ -1,5 +1,6 @@
 import type { HTTPResponseError } from 'hono/types';
-import z, { ZodError } from 'zod';
+import type z from 'zod';
+import { ZodError } from 'zod';
 import { getAppContext } from '@/http/utils/getAppContext';
 import { DatabaseError } from '@/errors/DatabaseError';
 import { log } from '@/services/log';

@@ -1,10 +1,10 @@
 import { Hono } from 'hono';
-import { verifyToken } from '@/http/middlewares/verifyToken';
 import { imagesRoutes } from './images/routes';
+import { getAttachment } from './get';
 
 const app = new Hono().basePath('/attachments');
 
-app.use(verifyToken);
+app.get('/:filename', getAttachment);
 app.route('/', imagesRoutes);
 
 export { app as attachmentsRoutes };
