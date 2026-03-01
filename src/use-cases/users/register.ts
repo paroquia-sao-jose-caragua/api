@@ -5,6 +5,7 @@ import { hashPassword } from 'serverless-crypto-utils/password-hashing';
 import { ulid } from 'serverless-crypto-utils/id-generation';
 
 interface RegisterUseCaseRequest {
+  name: string;
   email: string;
   password: string;
   role: 'admin' | 'user' | 'viewer';
@@ -18,6 +19,7 @@ export class RegisterUseCase {
   constructor(private usersDaf: UsersDAF) {}
 
   async execute({
+    name,
     email,
     password,
     role,
@@ -32,6 +34,7 @@ export class RegisterUseCase {
 
     const user = await this.usersDaf.create({
       id: ulid(),
+      name,
       email,
       passwordHash,
       role,

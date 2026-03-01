@@ -8,12 +8,17 @@ export const register: ControllerFn = async (c) => {
 
   const validationSchema = useUserSchema(t);
 
-  const { email, password, role } = validationSchema.parse(inputs);
+  const { name, email, password, role } = validationSchema.parse(inputs);
 
   try {
     const registerUseCase = makeRegisterUseCase(c);
 
-    const { user } = await registerUseCase.execute({ email, password, role });
+    const { user } = await registerUseCase.execute({
+      name,
+      email,
+      password,
+      role,
+    });
 
     return c.json({ user }, 201);
   } catch (err) {
