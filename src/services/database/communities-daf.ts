@@ -2,6 +2,7 @@ import type { Community } from '@/entities/community';
 
 export interface CommunitiesDAF {
   findById: (id: string) => Promise<Community | null>;
+  findBySlug: (slug: string) => Promise<Community | null>;
   findByName: (name: string) => Promise<Community | null>;
   findParish: () => Promise<Community | null>;
   findAll: () => Promise<Community[]>;

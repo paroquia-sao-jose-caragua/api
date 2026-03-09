@@ -45,6 +45,41 @@ export class D1CommunitiesDAF implements CommunitiesDAF {
     };
   }
 
+  async findBySlug(slug: string): Promise<Community | null> {
+    const community = await this.d1
+      .prepare(
+        `SELECT id, name, slug, type, address, cover_id, updated_at, created_at
+         FROM communities 
+         WHERE slug = ?`,
+      )
+      .bind(slug)
+      .first<{
+        id: string;
+        name: string;
+        slug: string;
+        type: 'chapel' | 'parish_church';
+        address: string;
+        cover_id: string;
+        updated_at: string;
+        created_at: string;
+      }>();
+
+    if (!community) {
+      return null;
+    }
+
+    return {
+      id: community.id,
+      name: community.name,
+      slug: community.slug,
+      type: community.type,
+      address: community.address,
+      coverId: community.cover_id,
+      updatedAt: community?.updated_at,
+      createdAt: community.created_at,
+    };
+  }
+
   async findByName(name: string): Promise<Community | null> {
     const community = await this.d1
       .prepare(
