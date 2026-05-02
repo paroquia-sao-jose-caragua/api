@@ -261,9 +261,9 @@ export class D1MassSchedulesDAF implements MassSchedulesDAF {
         .bind(
           id,
           communityId,
-          title,
+          title ?? null,
           type,
-          orientations,
+          orientations ?? null,
           isPrecept,
           recurrenceType,
           dayOfWeek ?? null,
@@ -282,7 +282,7 @@ export class D1MassSchedulesDAF implements MassSchedulesDAF {
       queries.push(
         this.d1
           .prepare(
-            'INSERT INTO mass_schedule_times (id, schedule_id, start_time) VALUES (?, ?, ?, ?)',
+            'INSERT INTO mass_schedule_times (id, schedule_id, start_time, end_time) VALUES (?, ?, ?, ?)',
           )
           .bind(time.id, time.scheduleId, time.startTime, time.endTime),
       );
