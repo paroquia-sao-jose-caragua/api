@@ -41,18 +41,15 @@ export function useMassScheduleSchema(t: TranslatorFn) {
         .min(1, t('error-month-of-year-range', { min: 1, max: 12 }))
         .max(12, t('error-month-of-year-range', { min: 1, max: 12 }))
         .optional(),
-      startDate: z
-        .string()
-        .refine(
-          (date) => {
-            if (!date) return true;
-            return !Number.isNaN(Date.parse(date));
-          },
-          { message: t('invalid-start-date') },
-        )
-        .optional(),
+      startDate: z.string(t('error-date-required')).refine(
+        (date) => {
+          if (!date) return true;
+          return !Number.isNaN(Date.parse(date));
+        },
+        { message: t('invalid-start-date') },
+      ),
       endDate: z
-        .string()
+        .string(t('error-date-required'))
         .refine(
           (date) => {
             if (!date) return true;
