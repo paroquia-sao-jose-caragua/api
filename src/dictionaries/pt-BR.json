@@ -14,6 +14,7 @@
   "error-community-not-found": "Comunidade não encontrada.",
   "error-cover-not-uploaded-yet": "A capa ainda não foi enviada.",
   "error-database-connection": "Erro ao conectar ao banco de dados.",
+  "error-date-required": "A data é obrigatória.",
   "error-day-of-month-range": "O dia do mês deve estar entre 1 e 31.",
   "error-day-of-month-required": "O dia do mês é obrigatório para este tipo de recorrência.",
   "error-day-of-week-range": "O dia da semana deve estar entre 0 (Domingo) e 6 (Sábado).",
