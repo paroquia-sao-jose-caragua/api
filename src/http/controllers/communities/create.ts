@@ -22,7 +22,15 @@ export const createCommunity: ControllerFn = async (c) => {
       coverId,
     });
 
-    return c.json({ community }, 201);
+    return c.json(
+      {
+        community: {
+          ...community,
+          coverUrl: c.env.S3_API_URL.concat('/', community.coverId),
+        },
+      },
+      201,
+    );
   } catch (err) {
     if (err instanceof ResourceAlreadyExistsError) {
       return c.json({ message: t('error-community-name-already-in-use') }, 400);
