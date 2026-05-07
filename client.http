@@ -1,4 +1,4 @@
-@baseUrl = https://localhost:3333
+@baseUrl = http://localhost:3333
 @token = X4IaDf+N3zhaVwmb.my5nGNZoChA7uZYmd3dEHSwEHsed9kJQ6VNW02NIql4+KmdzZc3jIVotJDD5D7WkhQGI8eoH3C2cQVYmy+JFjuQXT4TS8u/w4i56Qa7RW9055cYHP//vtZAdUNKwwFJHBZMo9M0kIKWv9hb/nTFlah2rnuG6/kqQVtJPnEmRJojsBRbJRuBxwcgLddU=.BdOu58T03AEfEhZgLBWEoeWLd/BRi4ThzRLrdZ+rQQw=
 
 # health-check
@@ -23,7 +23,8 @@ Content-Type: application/json
 Authorization: Bearer {{token}}
 
 {
-  "email": "giselle@gmail.com",
+  "name": "Admin",
+  "email": "admin@gmail.com",
   "password": "123@Mudar",
-  "role": "viewer"
+  "role": "admin"
 }
