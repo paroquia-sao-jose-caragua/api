@@ -320,9 +320,9 @@ export class D1MassSchedulesDAF implements MassSchedulesDAF {
         )
         .bind(
           massSchedule.communityId,
-          massSchedule.title,
+          massSchedule.title ?? null,
           massSchedule.type,
-          massSchedule.orientations,
+          massSchedule.orientations ?? null,
           massSchedule.isPrecept,
           massSchedule.recurrenceType,
           massSchedule.dayOfWeek ?? null,

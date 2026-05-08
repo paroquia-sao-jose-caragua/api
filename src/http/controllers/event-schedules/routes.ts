@@ -9,4 +9,4 @@ app.post('/', createEventSchedule);
 app.patch('/', editEventSchedule);
 app.delete('/', deleteEventSchedule);
 
-export { app as clergyRoutes };
+export { app as eventSchedulesRoutes };
