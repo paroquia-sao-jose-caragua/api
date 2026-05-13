@@ -129,9 +129,9 @@ export class D1MassSchedulesDAF implements MassSchedulesDAF {
         return {
           id: row.id,
           communityId: row.community_id,
-          title: row.title,
+          title: row.title ?? undefined,
           type: row.type,
-          orientations: row.orientations,
+          orientations: row.orientations ?? undefined,
           isPrecept: row.is_precept,
           recurrenceType: row.recurrence_type,
           dayOfWeek: row.day_of_week ?? undefined,
