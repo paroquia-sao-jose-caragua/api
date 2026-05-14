@@ -10,7 +10,21 @@ export class D1EventSchedulesDAF implements EventSchedulesDAF {
 
   async findById(id: string) {
     const eventSchedule = await this.d1
-      .prepare('SELECT * FROM event_schedules WHERE id = ?')
+      .prepare(
+        `SELECT
+          id,
+          community_id as communityId,
+          title,
+          type,
+          event_date as eventDate,
+          start_time as startTime,
+          end_time as endTime,
+          custom_location as customLocation,
+          orientations,
+          created_at as createdAt,
+          updated_at as updatedAt
+        FROM event_schedules WHERE id = ?`,
+      )
       .bind(id)
       .first<{
         id: string;
@@ -48,7 +62,19 @@ export class D1EventSchedulesDAF implements EventSchedulesDAF {
   async findMany(data: { from: string; to: string }): Promise<EventSchedule[]> {
     const eventSchedules = await this.d1
       .prepare(
-        'SELECT * FROM event_schedules WHERE eventDate BETWEEN ? AND ? ORDER BY eventDate, startTime',
+        `SELECT
+          id,
+          community_id as communityId,
+          title,
+          type,
+          event_date as eventDate,
+          start_time as startTime,
+          end_time as endTime,
+          custom_location as customLocation,
+          orientations,
+          created_at as createdAt,
+          updated_at as updatedAt
+        FROM event_schedules WHERE event_date BETWEEN ? AND ? ORDER BY event_date, start_time`,
       )
       .bind(data.from, data.to)
       .all<{
@@ -97,16 +123,16 @@ export class D1EventSchedulesDAF implements EventSchedulesDAF {
       .prepare(
         `INSERT INTO event_schedules (
           id,
-          communityId,
+          community_id,
           title,
           type,
-          eventDate,
-          startTime,
-          endTime,
-          customLocation,
+          event_date,
+          start_time,
+          end_time,
+          custom_location,
           orientations,
-          createdAt,
-          updatedAt
+          created_at,
+          updated_at
         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       )
       .bind(
@@ -129,16 +155,16 @@ export class D1EventSchedulesDAF implements EventSchedulesDAF {
     await this.d1
       .prepare(
         `UPDATE event_schedules SET
-          communityId = ?,
+          community_id = ?,
           title = ?,
           type = ?,
-          eventDate = ?,
-          startTime = ?,
-          endTime = ?,
-          customLocation = ?,
+          event_date = ?,
+          start_time = ?,
+          end_time = ?,
+          custom_location = ?,
           orientations = ?,
-          createdAt = ?,
-          updatedAt = ?
+          created_at = ?,
+          updated_at = ?
         WHERE id = ?`,
       )
       .bind(

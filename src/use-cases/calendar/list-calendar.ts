@@ -255,6 +255,10 @@ export class ListCalendarUseCase {
       });
     }
 
+    // list after today inclusive
+    const today = moment().startOf('day');
+    calendar = calendar.filter((day) => moment(day.date).isSameOrAfter(today));
+
     return { calendar };
   }
 }

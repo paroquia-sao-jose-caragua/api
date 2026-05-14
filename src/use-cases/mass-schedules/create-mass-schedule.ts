@@ -17,7 +17,6 @@ interface CreateMassScheduleUseCaseRequest {
   monthOfYear?: number;
   startDate?: string;
   endDate?: string;
-  active: boolean;
   times: { startTime: string; endTime: string }[]; // Array de horários no formato "HH:MM"
 }
 
@@ -44,7 +43,6 @@ export class CreateMassScheduleUseCase {
     monthOfYear,
     startDate,
     endDate,
-    active,
     times,
   }: CreateMassScheduleUseCaseRequest): Promise<CreateMassScheduleUseCaseResponse> {
     const community = await this.communitiesDaf.findById(communityId);
@@ -67,7 +65,7 @@ export class CreateMassScheduleUseCase {
       dayOfMonth,
       weekOfMonth,
       monthOfYear,
-      active,
+      active: true,
       startDate,
       endDate,
       createdAt: new Date().toISOString(),
