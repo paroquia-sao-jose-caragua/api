@@ -6,21 +6,7 @@ import { ResourceNotFoundError } from '@/use-cases/errors/resource-not-found-err
 export const createMassSchedule: ControllerFn = async (c) => {
   const { t, inputs, params } = getAppContext(c);
 
-  const {
-    title,
-    orientations,
-    recurrenceType,
-    type,
-    isPrecept,
-    times,
-    dayOfMonth,
-    dayOfWeek,
-    endDate,
-    monthOfYear,
-    startDate,
-    weekOfMonth,
-    active,
-  } = useMassScheduleSchema(t).parse(inputs);
+  const values = useMassScheduleSchema(t).parse(inputs);
 
   const { id: communityId } = params;
 
@@ -29,19 +15,7 @@ export const createMassSchedule: ControllerFn = async (c) => {
 
     const { massSchedule } = await createUseCase.execute({
       communityId,
-      title,
-      orientations,
-      recurrenceType,
-      type,
-      isPrecept,
-      times,
-      dayOfMonth,
-      dayOfWeek,
-      endDate,
-      monthOfYear,
-      startDate,
-      weekOfMonth,
-      active,
+      ...values,
     });
 
     return c.json({ massSchedule }, 201);
