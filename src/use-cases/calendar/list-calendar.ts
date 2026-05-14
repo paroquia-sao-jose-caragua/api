@@ -152,6 +152,7 @@ export class ListCalendarUseCase {
             status: 'active',
             community: {
               id: schedule.communityId,
+              type: community.type,
               name: community.name,
               address: community.address,
             },
