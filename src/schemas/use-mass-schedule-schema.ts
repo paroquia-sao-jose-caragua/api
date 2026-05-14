@@ -95,7 +95,7 @@ export function useMassScheduleSchema(t: TranslatorFn) {
 
       if (
         data.recurrenceType === 'monthly' &&
-        (data.dayOfMonth === undefined || data.dayOfMonth === null)
+        (data.dayOfMonth === undefined || data.dayOfMonth === null) && data.weekOfMonth === undefined
       ) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,

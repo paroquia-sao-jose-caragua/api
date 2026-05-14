@@ -84,8 +84,14 @@ export class ListCalendarUseCase {
           if (schedule.dayOfWeek !== undefined && schedule.weekOfMonth === 1) {
             return isFirstWeekdayOfMonth(moment(date), schedule.dayOfWeek);
           }
-          // Para dia fixo do mês
-          return schedule.dayOfMonth === day;
+
+          if (schedule.dayOfWeek !== undefined && schedule.weekOfMonth !== undefined) {
+            return isNthWeekdayOfMonth(
+              moment(date),
+              schedule.dayOfWeek,
+              schedule.weekOfMonth,
+            );
+          }
         }
 
         if (schedule.recurrenceType === 'weekly') {
@@ -279,4 +285,45 @@ function isFirstWeekdayOfMonth(date: moment.Moment, weekday: number) {
     weekday,
   );
   return date.isSame(firstWeekday, 'day');
+}
+
+function getNthWeekdayOfMonth(
+  month: number,
+  year: number,
+  weekday: number,
+  n: number,
+) {
+  // procura a n-ésima ocorrência do weekday no mês
+  const date = moment({ year, month: month - 1, day: 1 });
+  let count = 0;
+  while (date.month() === month - 1) {
+    if (date.weekday() === weekday) {
+      count++;
+      if (count === n) {
+        return date.clone();
+      }
+    }
+    date.add(1, 'day');
+  }
+
+  // se não encontrou a n-ésima (ex.: 5ª em um mês com 4), retorna a última ocorrência
+  const last = moment({ year, month: month - 1 }).endOf('month');
+  while (last.weekday() !== weekday) {
+    last.subtract(1, 'day');
+  }
+  return last;
+}
+
+function isNthWeekdayOfMonth(
+  date: moment.Moment,
+  weekday: number,
+  weekOfMonth: number,
+) {
+  const nth = getNthWeekdayOfMonth(
+    date.month() + 1,
+    date.year(),
+    weekday,
+    weekOfMonth,
+  );
+  return date.isSame(nth, 'day');
 }
