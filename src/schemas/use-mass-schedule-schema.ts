@@ -58,7 +58,6 @@ export function useMassScheduleSchema(t: TranslatorFn) {
           { message: t('invalid-end-date') },
         )
         .optional(),
-      active: z.coerce.boolean(),
       times: z
         .array(
           z.object({

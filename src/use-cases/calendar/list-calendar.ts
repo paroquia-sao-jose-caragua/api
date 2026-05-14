@@ -152,6 +152,7 @@ export class ListCalendarUseCase {
             status: 'active',
             community: {
               id: schedule.communityId,
+              type: community.type,
               name: community.name,
               address: community.address,
             },
@@ -254,6 +255,10 @@ export class ListCalendarUseCase {
         };
       });
     }
+
+    // list after today inclusive
+    const today = moment().startOf('day');
+    calendar = calendar.filter((day) => moment(day.date).isSameOrAfter(today));
 
     return { calendar };
   }
