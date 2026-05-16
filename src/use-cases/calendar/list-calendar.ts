@@ -85,7 +85,10 @@ export class ListCalendarUseCase {
             return isFirstWeekdayOfMonth(moment(date), schedule.dayOfWeek);
           }
 
-          if (schedule.dayOfWeek !== undefined && schedule.weekOfMonth !== undefined) {
+          if (
+            schedule.dayOfWeek !== undefined &&
+            schedule.weekOfMonth !== undefined
+          ) {
             return isNthWeekdayOfMonth(
               moment(date),
               schedule.dayOfWeek,
@@ -137,33 +140,35 @@ export class ListCalendarUseCase {
 
       const priorityTypes = ['solemnity', 'devotional', 'ordinary'];
 
-      const schedules: CalendarSchedule['schedules'] = massSchedulesInDate
-        .sort(
-          (a, b) =>
-            priorityTypes.indexOf(a.type) - priorityTypes.indexOf(b.type),
-        )
-        .flatMap((schedule) => {
-          const community = communities.find(
-            (c) => c.id === schedule.communityId,
-          ) as Community;
+      const schedules: CalendarSchedule['schedules']['active'] =
+        massSchedulesInDate
+          .sort(
+            (a, b) =>
+              priorityTypes.indexOf(a.type) - priorityTypes.indexOf(b.type),
+          )
+          .flatMap((schedule) => {
+            const community = communities.find(
+              (c) => c.id === schedule.communityId,
+            ) as Community;
 
-          return schedule.times.map((time) => ({
-            type: 'mass' as const,
-            title: schedule.title,
-            massType: schedule.type,
-            orientations: schedule.orientations,
-            isPrecept: schedule.isPrecept,
-            startTime: time.startTime,
-            endTime: time.endTime,
-            status: 'active',
-            community: {
-              id: schedule.communityId,
-              type: community.type,
-              name: community.name,
-              address: community.address,
-            },
-          }));
-        });
+            return schedule.times.map((time) => ({
+              type: 'mass' as const,
+              title: schedule.title,
+              massType: schedule.type,
+              massScheduleId: schedule.id,
+              orientations: schedule.orientations,
+              isPrecept: schedule.isPrecept,
+              startTime: time.startTime,
+              endTime: time.endTime,
+              status: 'active',
+              community: {
+                id: schedule.communityId,
+                type: community.type,
+                name: community.name,
+                address: community.address,
+              },
+            }));
+          });
 
       const eventSchedulesInDate = eventSchedules.filter(
         (es) => es.eventDate === date,
@@ -198,22 +203,37 @@ export class ListCalendarUseCase {
         date,
         dayOfWeek: moment(date).weekday(),
         dayOfWeekLabel: moment(date).format('dddd'),
-        schedules,
+        schedules: {
+          active: schedules,
+          exceptions: [],
+        },
       });
     }
 
     calendar = calendar.map((day) => ({
       ...day,
-      schedules: day.schedules.sort((a, b) => {
-        const aFirstTime = a.startTime.split(':').map(Number);
-        const bFirstTime = b.startTime.split(':').map(Number);
+      schedules: {
+        active: day.schedules.active.sort((a, b) => {
+          const aFirstTime = a.startTime.split(':').map(Number);
+          const bFirstTime = b.startTime.split(':').map(Number);
 
-        if (aFirstTime[0] === bFirstTime[0]) {
-          return aFirstTime[1] - bFirstTime[1];
-        }
+          if (aFirstTime[0] === bFirstTime[0]) {
+            return aFirstTime[1] - bFirstTime[1];
+          }
 
-        return aFirstTime[0] - bFirstTime[0];
-      }),
+          return aFirstTime[0] - bFirstTime[0];
+        }),
+        exceptions: day.schedules.exceptions.sort((a, b) => {
+          const aFirstTime = a.startTime.split(':').map(Number);
+          const bFirstTime = b.startTime.split(':').map(Number);
+
+          if (aFirstTime[0] === bFirstTime[0]) {
+            return aFirstTime[1] - bFirstTime[1];
+          }
+
+          return aFirstTime[0] - bFirstTime[0];
+        }),
+      },
     }));
 
     const exceptions = await this.massSchedulesExceptionsDaf.findMany({
@@ -232,7 +252,11 @@ export class ListCalendarUseCase {
           return day;
         }
 
-        const updatedSchedules = day.schedules.map((schedule) => {
+        const activeSchedules: CalendarSchedule['schedules']['active'] = [];
+        const exceptionSchedules: CalendarSchedule['schedules']['exceptions'] =
+          [];
+
+        for (const schedule of day.schedules.active) {
           const matchingException = dayExceptions.find(
             (ex) =>
               ex.startTime === schedule.startTime &&
@@ -245,19 +269,21 @@ export class ListCalendarUseCase {
           );
 
           if (matchingException) {
-            return {
+            exceptionSchedules.push({
               ...schedule,
-              status: 'canceled',
-              cancellationReason: matchingException.reason,
-            };
+              exception: matchingException,
+            });
+          } else {
+            activeSchedules.push(schedule);
           }
-
-          return schedule;
-        });
+        }
 
         return {
           ...day,
-          schedules: updatedSchedules,
+          schedules: {
+            active: activeSchedules,
+            exceptions: exceptionSchedules,
+          },
         };
       });
     }

@@ -1,3 +1,5 @@
+import type { MassScheduleException } from './mass-schedule-exception';
+
 type MassSchedule = {
   type: 'mass';
   title?: string;
@@ -6,6 +8,7 @@ type MassSchedule = {
   isPrecept: boolean;
   startTime: string;
   endTime: string;
+  cancellationReason?: string;
   community: {
     id: string;
     name: string;
@@ -35,6 +38,7 @@ type EventSchedule = {
   orientations?: string;
   startTime: string;
   endTime?: string;
+  cancellationReason?: string;
   community: {
     id: string;
     name: string;
@@ -44,9 +48,16 @@ type EventSchedule = {
 
 type Schedule = MassSchedule | EventSchedule;
 
+type ExceptionSchedule = Schedule & {
+  exception?: MassScheduleException;
+};
+
 export type CalendarSchedule = {
   date: string;
   dayOfWeek: number;
   dayOfWeekLabel: string;
-  schedules: Schedule[];
+  schedules: {
+    active: Schedule[];
+    exceptions: ExceptionSchedule[];
+  };
 };
