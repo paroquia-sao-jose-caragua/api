@@ -234,8 +234,10 @@ CREATE INDEX IF NOT EXISTS idx_mass_exceptions_date ON mass_schedule_exceptions(
 CREATE TABLE IF NOT EXISTS event_schedules (
   id VARCHAR(26) PRIMARY KEY NOT NULL,
   community_id VARCHAR(26) NOT NULL,
-  title VARCHAR(255) NOT NULL,
+  title VARCHAR(255),
   type VARCHAR(50) NOT NULL,
+  mass_type VARCHAR(50) DEFAULT NULL,
+  is_precept BOOLEAN DEFAULT NULL,
   event_date DATE NOT NULL,
   start_time TIME NOT NULL,
   end_time TIME,
@@ -260,5 +262,5 @@ CREATE TABLE IF NOT EXISTS migrations (
 );
 
 INSERT INTO migrations (id, name, description, author) 
-VALUES (1, '0001_initial_migration', 'Run initial migration to create users and migrations tables', 'Giselle Hoekveld Silva')
+VALUES (1, '0001-init-db', 'Run initial migration to create users and migrations tables', 'Giselle Hoekveld Silva')
 ON CONFLICT(id) DO NOTHING;
