@@ -90,6 +90,10 @@ export function useEventScheduleSchema(t: TranslatorFn) {
           message: t('required-field'),
         });
       }
+
+      if (data.customLocation === '') {
+        ctx.value.customLocation = undefined;
+      }
     });
 
   return schema;
