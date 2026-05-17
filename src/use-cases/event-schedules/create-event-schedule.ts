@@ -6,8 +6,10 @@ import { makeId } from '../factories/make-id';
 
 interface CreateEventScheduleUseCaseRequest {
   communityId: string;
-  title: string;
+  title?: string;
   type: EventSchedule['type'];
+  massType?: EventSchedule['massType'];
+  isPrecept?: boolean;
   eventDate: string;
   startTime: string;
   endTime?: string;
@@ -29,6 +31,8 @@ export class CreateEventScheduleUseCase {
     communityId,
     title,
     type,
+    massType,
+    isPrecept,
     eventDate,
     startTime,
     endTime,
@@ -46,6 +50,8 @@ export class CreateEventScheduleUseCase {
       communityId,
       title,
       type,
+      massType,
+      isPrecept,
       eventDate,
       startTime,
       endTime,

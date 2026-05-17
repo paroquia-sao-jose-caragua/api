@@ -18,7 +18,7 @@ type MassSchedule = {
 
 type EventSchedule = {
   type: 'event';
-  title: string;
+  title?: string;
   eventType:
     | 'mass'
     | 'pilgrimage'
