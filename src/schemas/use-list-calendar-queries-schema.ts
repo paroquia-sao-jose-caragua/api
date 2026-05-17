@@ -38,6 +38,7 @@ export function useListCalendarQueriesSchema(t: TranslatorFn) {
         },
       )
       .transform((value) => Number(value)),
+    communityId: z.string().optional(),
   });
 
   return schema;

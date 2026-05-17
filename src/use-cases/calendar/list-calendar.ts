@@ -9,6 +9,7 @@ import moment from 'moment';
 interface ListCalendarUseCaseRequest {
   month: number;
   year: number;
+  communityId?: string;
 }
 export class ListCalendarUseCase {
   constructor(
@@ -18,7 +19,7 @@ export class ListCalendarUseCase {
     private communitiesDaf: CommunitiesDAF,
   ) {}
 
-  async execute({ month, year }: ListCalendarUseCaseRequest) {
+  async execute({ month, year, communityId }: ListCalendarUseCaseRequest) {
     const baseYear = year ?? moment().year();
 
     const firstDateOfMonth = moment({
@@ -145,6 +146,7 @@ export class ListCalendarUseCase {
             (a, b) =>
               priorityTypes.indexOf(a.type) - priorityTypes.indexOf(b.type),
           )
+          .filter((s) => (communityId ? s.communityId === communityId : true))
           .flatMap((schedule) => {
             const community = communities.find(
               (c) => c.id === schedule.communityId,
@@ -165,6 +167,7 @@ export class ListCalendarUseCase {
                 type: community.type,
                 name: community.name,
                 address: community.address,
+                coverId: community.coverId,
               },
             }));
           });
@@ -174,27 +177,31 @@ export class ListCalendarUseCase {
       );
 
       if (eventSchedulesInDate.length > 0) {
-        const eventSchedulesMapped = eventSchedulesInDate.map((es) => {
-          const community = communities.find(
-            (c) => c.id === es.communityId,
-          ) as Community;
+        const eventSchedulesMapped = eventSchedulesInDate
+          .filter((es) => (communityId ? es.communityId === communityId : true))
+          .map((es) => {
+            const community = communities.find(
+              (c) => c.id === es.communityId,
+            ) as Community;
 
-          return {
-            eventScheduleId: es.id,
-            type: 'event' as const,
-            title: es.title,
-            eventType: es.type,
-            startTime: es.startTime,
-            endTime: es.endTime,
-            customLocation: es.customLocation,
-            orientations: es.orientations,
-            community: {
-              id: es.communityId,
-              name: community.name,
-              address: community.address,
-            },
-          };
-        });
+            return {
+              eventScheduleId: es.id,
+              type: 'event' as const,
+              title: es.title,
+              eventType: es.type,
+              startTime: es.startTime,
+              endTime: es.endTime,
+              customLocation: es.customLocation,
+              orientations: es.orientations,
+              community: {
+                id: es.communityId,
+                type: community.type,
+                name: community.name,
+                address: community.address,
+                coverId: community.coverId,
+              },
+            };
+          });
 
         schedules.push(...eventSchedulesMapped);
       }

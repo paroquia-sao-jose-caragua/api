@@ -11,8 +11,10 @@ type MassSchedule = {
   cancellationReason?: string;
   community: {
     id: string;
+    type: 'parish_church' | 'chapel';
     name: string;
     address: string;
+    coverId: string;
   };
 };
 
@@ -42,8 +44,10 @@ type EventSchedule = {
   cancellationReason?: string;
   community: {
     id: string;
+    type: 'parish_church' | 'chapel';
     name: string;
     address: string;
+    coverId: string;
   };
 };
 
