@@ -4,19 +4,19 @@ import { AlreadyExistsError } from '@/use-cases/errors/already-exists-error';
 import { ResourceNotFoundError } from '@/use-cases/errors/resource-not-found-error';
 import { makeCreateMassScheduleException } from '@/use-cases/factories/mass-schedule-exceptions/make-create-mass-schedule-exception';
 
-export const createMassException: ControllerFn = async (c) => {
+export const createMassScheduleException: ControllerFn = async (c) => {
   const { user, t, params, inputs } = getAppContext(c);
 
-  const { exceptionDate, reason, startTime } = useMassScheduleExceptionSchema(
-    t,
-  ).parse(inputs.body);
+  const validationSchema = useMassScheduleExceptionSchema(t);
+
+  const { exceptionDate, reason, startTime } = validationSchema.parse(inputs);
 
   const { id: massScheduleId } = params;
 
   try {
     const useCase = makeCreateMassScheduleException(c);
 
-    const massScheduleException = await useCase.execute({
+    const { massScheduleException } = await useCase.execute({
       scheduleId: massScheduleId,
       exceptionDate,
       reason,

@@ -2,7 +2,7 @@ import { getAppContext } from '@/http/utils/getAppContext';
 import { ResourceNotFoundError } from '@/use-cases/errors/resource-not-found-error';
 import { makeDeleteMassScheduleException } from '@/use-cases/factories/mass-schedule-exceptions/make-delete-mass-schedule-exception';
 
-export const deleteMassException: ControllerFn = async (c) => {
+export const deleteMassScheduleException: ControllerFn = async (c) => {
   const { t, params } = getAppContext(c);
 
   const { id: exceptionId } = params;

@@ -16,6 +16,8 @@ export class D1EventSchedulesDAF implements EventSchedulesDAF {
           community_id as communityId,
           title,
           type,
+          mass_type as massType,
+          is_precept as isPrecept,
           event_date as eventDate,
           start_time as startTime,
           end_time as endTime,
@@ -29,8 +31,10 @@ export class D1EventSchedulesDAF implements EventSchedulesDAF {
       .first<{
         id: string;
         communityId: string;
-        title: string;
-        type: string;
+        title: string | null;
+        type: EventSchedule['type'];
+        massType: EventSchedule['massType'] | null;
+        isPrecept: boolean | null;
         eventDate: string;
         startTime: string;
         endTime: string | null;
@@ -47,8 +51,10 @@ export class D1EventSchedulesDAF implements EventSchedulesDAF {
     return {
       id: eventSchedule.id,
       communityId: eventSchedule.communityId,
-      title: eventSchedule.title,
-      type: eventSchedule.type as EventSchedule['type'],
+      title: eventSchedule.title ?? undefined,
+      type: eventSchedule.type,
+      massType: eventSchedule.massType ?? undefined,
+      isPrecept: eventSchedule.isPrecept ?? undefined,
       eventDate: eventSchedule.eventDate,
       startTime: eventSchedule.startTime,
       endTime: eventSchedule.endTime ?? undefined,
@@ -67,6 +73,8 @@ export class D1EventSchedulesDAF implements EventSchedulesDAF {
           community_id as communityId,
           title,
           type,
+          mass_type as massType,
+          is_precept as isPrecept,
           event_date as eventDate,
           start_time as startTime,
           end_time as endTime,
@@ -80,8 +88,10 @@ export class D1EventSchedulesDAF implements EventSchedulesDAF {
       .all<{
         id: string;
         communityId: string;
-        title: string;
-        type: string;
+        title: string | null;
+        type: EventSchedule['type'];
+        massType: EventSchedule['massType'] | null;
+        isPrecept: boolean | null;
         eventDate: string;
         startTime: string;
         endTime: string | null;
@@ -94,8 +104,10 @@ export class D1EventSchedulesDAF implements EventSchedulesDAF {
     return eventSchedules.results.map((eventSchedule) => ({
       id: eventSchedule.id,
       communityId: eventSchedule.communityId,
-      title: eventSchedule.title,
-      type: eventSchedule.type as EventSchedule['type'],
+      title: eventSchedule.title ?? undefined,
+      type: eventSchedule.type,
+      massType: eventSchedule.massType ?? undefined,
+      isPrecept: eventSchedule.isPrecept ?? undefined,
       eventDate: eventSchedule.eventDate,
       startTime: eventSchedule.startTime,
       endTime: eventSchedule.endTime ?? undefined,
@@ -114,6 +126,8 @@ export class D1EventSchedulesDAF implements EventSchedulesDAF {
     startTime,
     title,
     type,
+    massType,
+    isPrecept,
     customLocation,
     endTime,
     orientations,
@@ -126,6 +140,8 @@ export class D1EventSchedulesDAF implements EventSchedulesDAF {
           community_id,
           title,
           type,
+          mass_type,
+          is_precept,
           event_date,
           start_time,
           end_time,
@@ -133,13 +149,15 @@ export class D1EventSchedulesDAF implements EventSchedulesDAF {
           orientations,
           created_at,
           updated_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       )
       .bind(
         id,
         communityId,
-        title,
+        title ?? null,
         type,
+        massType ?? null,
+        isPrecept ?? null,
         eventDate,
         startTime,
         endTime ?? null,
@@ -158,6 +176,8 @@ export class D1EventSchedulesDAF implements EventSchedulesDAF {
           community_id = ?,
           title = ?,
           type = ?,
+          mass_type = ?,
+          is_precept = ?,
           event_date = ?,
           start_time = ?,
           end_time = ?,
@@ -169,8 +189,10 @@ export class D1EventSchedulesDAF implements EventSchedulesDAF {
       )
       .bind(
         eventSchedule.communityId,
-        eventSchedule.title,
+        eventSchedule.title ?? null,
         eventSchedule.type,
+        eventSchedule.massType ?? null,
+        eventSchedule.isPrecept ?? null,
         eventSchedule.eventDate,
         eventSchedule.startTime,
         eventSchedule.endTime ?? null,

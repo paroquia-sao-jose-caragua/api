@@ -9,8 +9,8 @@ import moment from 'moment';
 interface ListCalendarUseCaseRequest {
   month: number;
   year: number;
+  communityId?: string;
 }
-
 export class ListCalendarUseCase {
   constructor(
     private massSchedulesDaf: MassSchedulesDAF,
@@ -19,7 +19,7 @@ export class ListCalendarUseCase {
     private communitiesDaf: CommunitiesDAF,
   ) {}
 
-  async execute({ month, year }: ListCalendarUseCaseRequest) {
+  async execute({ month, year, communityId }: ListCalendarUseCaseRequest) {
     const baseYear = year ?? moment().year();
 
     const firstDateOfMonth = moment({
@@ -84,8 +84,17 @@ export class ListCalendarUseCase {
           if (schedule.dayOfWeek !== undefined && schedule.weekOfMonth === 1) {
             return isFirstWeekdayOfMonth(moment(date), schedule.dayOfWeek);
           }
-          // Para dia fixo do mês
-          return schedule.dayOfMonth === day;
+
+          if (
+            schedule.dayOfWeek !== undefined &&
+            schedule.weekOfMonth !== undefined
+          ) {
+            return isNthWeekdayOfMonth(
+              moment(date),
+              schedule.dayOfWeek,
+              schedule.weekOfMonth,
+            );
+          }
         }
 
         if (schedule.recurrenceType === 'weekly') {
@@ -131,59 +140,68 @@ export class ListCalendarUseCase {
 
       const priorityTypes = ['solemnity', 'devotional', 'ordinary'];
 
-      const schedules: CalendarSchedule['schedules'] = massSchedulesInDate
-        .sort(
-          (a, b) =>
-            priorityTypes.indexOf(a.type) - priorityTypes.indexOf(b.type),
-        )
-        .flatMap((schedule) => {
-          const community = communities.find(
-            (c) => c.id === schedule.communityId,
-          ) as Community;
+      const schedules: CalendarSchedule['schedules']['active'] =
+        massSchedulesInDate
+          .sort(
+            (a, b) =>
+              priorityTypes.indexOf(a.type) - priorityTypes.indexOf(b.type),
+          )
+          .filter((s) => (communityId ? s.communityId === communityId : true))
+          .flatMap((schedule) => {
+            const community = communities.find(
+              (c) => c.id === schedule.communityId,
+            ) as Community;
 
-          return schedule.times.map((time) => ({
-            type: 'mass' as const,
-            title: schedule.title,
-            massType: schedule.type,
-            orientations: schedule.orientations,
-            isPrecept: schedule.isPrecept,
-            startTime: time.startTime,
-            endTime: time.endTime,
-            status: 'active',
-            community: {
-              id: schedule.communityId,
-              type: community.type,
-              name: community.name,
-              address: community.address,
-            },
-          }));
-        });
+            return schedule.times.map((time) => ({
+              type: 'mass' as const,
+              title: schedule.title,
+              massType: schedule.type,
+              massScheduleId: schedule.id,
+              orientations: schedule.orientations,
+              isPrecept: schedule.isPrecept,
+              startTime: time.startTime,
+              endTime: time.endTime,
+              status: 'active',
+              community: {
+                id: schedule.communityId,
+                type: community.type,
+                name: community.name,
+                address: community.address,
+                coverId: community.coverId,
+              },
+            }));
+          });
 
       const eventSchedulesInDate = eventSchedules.filter(
         (es) => es.eventDate === date,
       );
 
       if (eventSchedulesInDate.length > 0) {
-        const eventSchedulesMapped = eventSchedulesInDate.map((es) => {
-          const community = communities.find(
-            (c) => c.id === es.communityId,
-          ) as Community;
+        const eventSchedulesMapped = eventSchedulesInDate
+          .filter((es) => (communityId ? es.communityId === communityId : true))
+          .map((es) => {
+            const community = communities.find(
+              (c) => c.id === es.communityId,
+            ) as Community;
 
-          return {
-            type: 'event' as const,
-            title: es.title,
-            eventType: es.type,
-            startTime: es.startTime,
-            endTime: es.endTime,
-            customLocation: es.customLocation,
-            orientations: es.orientations,
-            community: {
-              id: es.communityId,
-              name: community.name,
-              address: community.address,
-            },
-          };
-        });
+            return {
+              eventScheduleId: es.id,
+              type: 'event' as const,
+              title: es.title,
+              eventType: es.type,
+              startTime: es.startTime,
+              endTime: es.endTime,
+              customLocation: es.customLocation,
+              orientations: es.orientations,
+              community: {
+                id: es.communityId,
+                type: community.type,
+                name: community.name,
+                address: community.address,
+                coverId: community.coverId,
+              },
+            };
+          });
 
         schedules.push(...eventSchedulesMapped);
       }
@@ -192,22 +210,37 @@ export class ListCalendarUseCase {
         date,
         dayOfWeek: moment(date).weekday(),
         dayOfWeekLabel: moment(date).format('dddd'),
-        schedules,
+        schedules: {
+          active: schedules,
+          exceptions: [],
+        },
       });
     }
 
     calendar = calendar.map((day) => ({
       ...day,
-      schedules: day.schedules.sort((a, b) => {
-        const aFirstTime = a.startTime.split(':').map(Number);
-        const bFirstTime = b.startTime.split(':').map(Number);
+      schedules: {
+        active: day.schedules.active.sort((a, b) => {
+          const aFirstTime = a.startTime.split(':').map(Number);
+          const bFirstTime = b.startTime.split(':').map(Number);
 
-        if (aFirstTime[0] === bFirstTime[0]) {
-          return aFirstTime[1] - bFirstTime[1];
-        }
+          if (aFirstTime[0] === bFirstTime[0]) {
+            return aFirstTime[1] - bFirstTime[1];
+          }
 
-        return aFirstTime[0] - bFirstTime[0];
-      }),
+          return aFirstTime[0] - bFirstTime[0];
+        }),
+        exceptions: day.schedules.exceptions.sort((a, b) => {
+          const aFirstTime = a.startTime.split(':').map(Number);
+          const bFirstTime = b.startTime.split(':').map(Number);
+
+          if (aFirstTime[0] === bFirstTime[0]) {
+            return aFirstTime[1] - bFirstTime[1];
+          }
+
+          return aFirstTime[0] - bFirstTime[0];
+        }),
+      },
     }));
 
     const exceptions = await this.massSchedulesExceptionsDaf.findMany({
@@ -226,7 +259,11 @@ export class ListCalendarUseCase {
           return day;
         }
 
-        const updatedSchedules = day.schedules.map((schedule) => {
+        const activeSchedules: CalendarSchedule['schedules']['active'] = [];
+        const exceptionSchedules: CalendarSchedule['schedules']['exceptions'] =
+          [];
+
+        for (const schedule of day.schedules.active) {
           const matchingException = dayExceptions.find(
             (ex) =>
               ex.startTime === schedule.startTime &&
@@ -239,19 +276,21 @@ export class ListCalendarUseCase {
           );
 
           if (matchingException) {
-            return {
+            exceptionSchedules.push({
               ...schedule,
-              status: 'canceled',
-              cancellationReason: matchingException.reason,
-            };
+              exception: matchingException,
+            });
+          } else {
+            activeSchedules.push(schedule);
           }
-
-          return schedule;
-        });
+        }
 
         return {
           ...day,
-          schedules: updatedSchedules,
+          schedules: {
+            active: activeSchedules,
+            exceptions: exceptionSchedules,
+          },
         };
       });
     }
@@ -279,4 +318,45 @@ function isFirstWeekdayOfMonth(date: moment.Moment, weekday: number) {
     weekday,
   );
   return date.isSame(firstWeekday, 'day');
+}
+
+function getNthWeekdayOfMonth(
+  month: number,
+  year: number,
+  weekday: number,
+  n: number,
+) {
+  // procura a n-ésima ocorrência do weekday no mês
+  const date = moment({ year, month: month - 1, day: 1 });
+  let count = 0;
+  while (date.month() === month - 1) {
+    if (date.weekday() === weekday) {
+      count++;
+      if (count === n) {
+        return date.clone();
+      }
+    }
+    date.add(1, 'day');
+  }
+
+  // se não encontrou a n-ésima (ex.: 5ª em um mês com 4), retorna a última ocorrência
+  const last = moment({ year, month: month - 1 }).endOf('month');
+  while (last.weekday() !== weekday) {
+    last.subtract(1, 'day');
+  }
+  return last;
+}
+
+function isNthWeekdayOfMonth(
+  date: moment.Moment,
+  weekday: number,
+  weekOfMonth: number,
+) {
+  const nth = getNthWeekdayOfMonth(
+    date.month() + 1,
+    date.year(),
+    weekday,
+    weekOfMonth,
+  );
+  return date.isSame(nth, 'day');
 }

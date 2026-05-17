@@ -1,7 +1,7 @@
 export type EventSchedule = {
   id: string;
   communityId: string;
-  title: string;
+  title?: string;
   type:
     | 'mass' // Missa
     | 'pilgrimage' // Para eventos de peregrinação, como visitas a santuários ou locais religiosos
@@ -17,6 +17,8 @@ export type EventSchedule = {
     | 'ordination' // Ordenações sacerdotais ou diaconais
     | 'community_event' // Eventos culturais ou sociais, promovidos pela paróquia, como almoços,  apresentações musicais, peças teatrais, exposições de arte sacra, etc.
     | 'other';
+  massType?: 'ordinary' | 'devotional' | 'solemnity' | 'sacramental';
+  isPrecept?: boolean;
   eventDate: string;
   startTime: string;
   endTime?: string;
