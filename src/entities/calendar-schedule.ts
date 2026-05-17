@@ -17,6 +17,7 @@ type MassSchedule = {
 };
 
 type EventSchedule = {
+  eventScheduleId: string;
   type: 'event';
   title?: string;
   eventType:

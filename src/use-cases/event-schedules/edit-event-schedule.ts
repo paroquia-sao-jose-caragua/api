@@ -6,7 +6,9 @@ import { ResourceNotFoundError } from '../errors/resource-not-found-error';
 interface EditEventScheduleUseCaseRequest {
   eventScheduleId: string;
   communityId: string;
-  title: string;
+  title?: string;
+  massType?: EventSchedule['massType'];
+  isPrecept?: boolean;
   type: EventSchedule['type'];
   eventDate: string;
   startTime: string;
@@ -29,6 +31,9 @@ export class EditEventScheduleUseCase {
     eventScheduleId,
     title,
     type,
+    massType,
+    communityId,
+    isPrecept,
     eventDate,
     startTime,
     endTime,
@@ -42,17 +47,17 @@ export class EditEventScheduleUseCase {
       throw new ResourceNotFoundError();
     }
 
-    const community = await this.communitiesDaf.findById(
-      eventSchedule.communityId,
-    );
+    const community = await this.communitiesDaf.findById(communityId);
 
     if (!community) {
       throw new ResourceNotFoundError();
     }
 
-    eventSchedule.communityId = community.id;
+    eventSchedule.communityId = communityId;
     eventSchedule.title = title;
     eventSchedule.type = type;
+    eventSchedule.massType = massType;
+    eventSchedule.isPrecept = isPrecept;
     eventSchedule.eventDate = eventDate;
     eventSchedule.startTime = startTime;
     eventSchedule.endTime = endTime;

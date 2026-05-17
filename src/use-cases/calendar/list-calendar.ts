@@ -10,7 +10,6 @@ interface ListCalendarUseCaseRequest {
   month: number;
   year: number;
 }
-
 export class ListCalendarUseCase {
   constructor(
     private massSchedulesDaf: MassSchedulesDAF,
@@ -181,6 +180,7 @@ export class ListCalendarUseCase {
           ) as Community;
 
           return {
+            eventScheduleId: es.id,
             type: 'event' as const,
             title: es.title,
             eventType: es.type,
