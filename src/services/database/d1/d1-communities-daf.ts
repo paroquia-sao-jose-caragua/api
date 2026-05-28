@@ -1,7 +1,5 @@
-import { ulid } from 'serverless-crypto-utils/id-generation';
 import type { CommunitiesDAF } from '../communities-daf';
 import type { Community } from '@/entities/community';
-import { DatabaseError } from '@/errors/DatabaseError';
 
 export class D1CommunitiesDAF implements CommunitiesDAF {
   private d1: D1Database;
@@ -166,6 +164,8 @@ export class D1CommunitiesDAF implements CommunitiesDAF {
         updated_at: string;
         created_at: string;
       }>();
+
+    console.log('Communities fetched from D1:', communities);
 
     return communities.results.map((community) => ({
       id: community.id,
