@@ -49,7 +49,7 @@
         "DOMAIN": ".paroquiasaojosecaragua.org.br",
         "ENVIRONMENT": "staging",
         "PANEL_BASE_URL": "https://panel-staging.paroquiasaojosecaragua.org.br",
-        "SITE_BASE_URL": "https://site-staging.paroquiasaojosecaragua.org.br",
+        "SITE_BASE_URL": "https://staging.paroquiasaojosecaragua.org.br",
         "S3_API_URL": "https://cdn-staging.paroquiasaojosecaragua.org.br",
       },
       "d1_databases": [
@@ -81,7 +81,7 @@
         "DOMAIN": ".paroquiasaojosecaragua.org.br",
         "ENVIRONMENT": "production",
         "PANEL_BASE_URL": "https://panel.paroquiasaojosecaragua.org.br",
-        "SITE_BASE_URL": "https://site.paroquiasaojosecaragua.org.br",
+        "SITE_BASE_URL": "https://paroquiasaojosecaragua.org.br",
         "S3_API_URL": "https://cdn.paroquiasaojosecaragua.org.br",
       },
       "d1_databases": [
