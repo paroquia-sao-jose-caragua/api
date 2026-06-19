@@ -10,6 +10,8 @@ const app = new Hono();
 app.post('/sessions', authenticate);
 app.post('/token/refresh', refresh);
 
+app.post('/users', register);
+
 app.use('/users/*', verifyToken);
 app.post('/users', verifyUserRole('admin'), register);
 
