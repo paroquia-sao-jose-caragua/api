@@ -3,7 +3,7 @@ import type { MiddlewareHandler } from 'hono';
 
 export const corsSetup: MiddlewareHandler = cors({
   origin: (origin, c) => {
-    const allowedOrigins = [c.env.PANEL_BASE_URL];
+    const allowedOrigins = [c.env.PANEL_BASE_URL, c.env.SITE_BASE_URL];
 
     const isAllowed = allowedOrigins.includes(origin ?? '');
 
