@@ -165,8 +165,6 @@ export class D1CommunitiesDAF implements CommunitiesDAF {
         created_at: string;
       }>();
 
-    console.log('Communities fetched from D1:', communities);
-
     return communities.results.map((community) => ({
       id: community.id,
       name: community.name,
