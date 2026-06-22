@@ -9,8 +9,8 @@ import { getCommunityBySlug } from './get';
 
 const app = new Hono().basePath('/communities');
 
-app.use(verifyToken);
 app.get('/', listCommunities);
+app.use(verifyToken);
 app.get('/:slug', getCommunityBySlug);
 app.post('/', createCommunity);
 app.put('/:id', editCommunity);
