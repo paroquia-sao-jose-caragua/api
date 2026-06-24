@@ -2,6 +2,7 @@
   "name": "app",
   "version": "1.0.0",
   "description": "API Backend para o sistema da Paróquia São José - Caraguatatuba (Cloudflare Worker)",
+  "license": "GPL-3.0-or-later",
   "type": "module",
   "scripts": {
     "test": "vitest run --dir tests/use-cases",
@@ -12,7 +13,6 @@
     "build": "wrangler build",
     "cf-typegen": "wrangler types --env-interface CloudflareBindings",
     "db:init": "npx wrangler d1 execute parish-db-dev --local --file=./migrations/0001-init-db.sql",
-    "migration:dev": "npm run db:migrate:local",
     "lint": "eslint . --ext .ts --fix",
     "format": "prettier --write ."
   },
