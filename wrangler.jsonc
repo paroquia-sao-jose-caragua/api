@@ -12,7 +12,7 @@
     "DOMAIN": "localhost",
     "ENVIRONMENT": "development",
     "PANEL_BASE_URL": "http://localhost:3000",
-    "SITE_BASE_URL": "http://localhost:3000",
+    "SITE_BASE_URL": "http://localhost:3001",
     "S3_API_URL": "http://localhost:3333/attachments",
   },
   "d1_databases": [
