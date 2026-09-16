@@ -6,6 +6,8 @@ import { makeCreateAnnouncementUseCase } from '@/use-cases/factories/announcemen
 export const createAnnouncement: ControllerFn = async (c) => {
   const { t, inputs } = getAppContext(c);
 
+  console.log('createAnnouncement')
+
   const validationSchema = useAnnouncementSchema(t);
 
   const parsed = validationSchema.parse(inputs);
