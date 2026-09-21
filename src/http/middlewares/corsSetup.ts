@@ -18,6 +18,8 @@ export const corsSetup: MiddlewareHandler = cors({
 
     const isAllowed = allowedOrigins.includes(normalizedOrigin);
 
+    console.log({isAllowed, allowedOrigins, normalizedOrigin})
+
     return isAllowed ? origin : null;
   },
   allowHeaders: [
