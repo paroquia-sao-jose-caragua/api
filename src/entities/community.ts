@@ -1,3 +1,5 @@
+import type { MassSchedule } from './mass-schedule';
+
 export type Community = {
   id: string;
   name: string;
@@ -7,4 +9,5 @@ export type Community = {
   coverId: string;
   createdAt: string;
   updatedAt?: string;
+  massSchedules?: MassSchedule[];
 };
