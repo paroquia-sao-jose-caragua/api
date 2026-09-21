@@ -3,22 +3,11 @@ import type { MiddlewareHandler } from 'hono';
 
 export const corsSetup: MiddlewareHandler = cors({
   origin: (origin, c) => {
-    if (!origin) return null;
+    const allowedOrigins: string[] = [c.env.DASHBOARD_BASE_URL];
 
-    const rawOrigins = [c.env.PANEL_BASE_URL, c.env.SITE_BASE_URL].filter(
-      Boolean,
-    ) as string[];
+    const isAllowed = allowedOrigins.includes(origin ?? '');
 
-    const allowedOrigins = rawOrigins
-      .flatMap((item) => item.split(','))
-      .map((url) => url.trim().replace(/\/$/, ''))
-      .filter(Boolean);
-
-    const normalizedOrigin = origin.trim().replace(/\/$/, '');
-
-    const isAllowed = allowedOrigins.includes(normalizedOrigin);
-
-    console.log({isAllowed, allowedOrigins, normalizedOrigin})
+    console.log({isAllowed, allowedOrigins, origin})
 
     return isAllowed ? origin : null;
   },
