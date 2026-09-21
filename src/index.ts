@@ -16,6 +16,7 @@ import { eventSchedulesRoutes } from './http/controllers/event-schedules/routes'
 import { calendarRoutes } from './http/controllers/calendar/routes';
 import { announcementsRoutes } from './http/controllers/announcements/routes';
 import { liturgyRoutes } from './http/controllers/liturgy/routes';
+import { parishContactRoutes } from './http/controllers/parish-contact/routes';
 import { notFound } from './http/controllers/notFound';
 
 const app = new Hono<{ Bindings: Bindings; Variables: Variables }>({
@@ -38,6 +39,7 @@ app.route('/', eventSchedulesRoutes);
 app.route('/', calendarRoutes);
 app.route('/', announcementsRoutes);
 app.route('/', liturgyRoutes);
+app.route('/', parishContactRoutes);
 
 app.notFound(notFound);
 app.onError(onAppError);

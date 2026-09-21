@@ -1,6 +1,58 @@
 import type { CommunitiesDAF } from '../communities-daf';
 import type { Community } from '@/entities/community';
 
+type CommunityRow = {
+  id: string;
+  name: string;
+  slug: string;
+  type: 'chapel' | 'parish_church';
+  address: string;
+  cover_id: string;
+  hero_subtitle: string | null;
+  about_title: string | null;
+  about_description: string | null;
+  history_summary: string | null;
+  patron_name: string | null;
+  patron_description: string | null;
+  patron_photo_id: string | null;
+  phone: string | null;
+  email: string | null;
+  office_hours: string | null;
+  updated_at: string | null;
+  created_at: string;
+};
+
+function mapRowToCommunity(row: CommunityRow): Community {
+  return {
+    id: row.id,
+    name: row.name,
+    slug: row.slug,
+    type: row.type,
+    address: row.address,
+    coverId: row.cover_id,
+    heroSubtitle: row.hero_subtitle ?? undefined,
+    aboutTitle: row.about_title ?? undefined,
+    aboutDescription: row.about_description ?? undefined,
+    historySummary: row.history_summary ?? undefined,
+    patronName: row.patron_name ?? undefined,
+    patronDescription: row.patron_description ?? undefined,
+    patronPhotoId: row.patron_photo_id ?? undefined,
+    phone: row.phone ?? undefined,
+    email: row.email ?? undefined,
+    officeHours: row.office_hours ?? undefined,
+    updatedAt: row.updated_at ?? undefined,
+    createdAt: row.created_at,
+  };
+}
+
+const SELECT_COMMUNITIES_FIELDS = `
+  id, name, slug, type, address, cover_id,
+  hero_subtitle, about_title, about_description, history_summary,
+  patron_name, patron_description, patron_photo_id,
+  phone, email, office_hours,
+  updated_at, created_at
+`;
+
 export class D1CommunitiesDAF implements CommunitiesDAF {
   private d1: D1Database;
 
@@ -11,170 +63,80 @@ export class D1CommunitiesDAF implements CommunitiesDAF {
   async findById(id: string): Promise<Community | null> {
     const community = await this.d1
       .prepare(
-        `SELECT id, name, slug, type, address, cover_id, updated_at, created_at
+        `SELECT ${SELECT_COMMUNITIES_FIELDS}
          FROM communities 
          WHERE id = ?`,
       )
       .bind(id)
-      .first<{
-        id: string;
-        name: string;
-        slug: string;
-        type: 'chapel' | 'parish_church';
-        address: string;
-        cover_id: string;
-        updated_at: string;
-        created_at: string;
-      }>();
+      .first<CommunityRow>();
 
     if (!community) {
       return null;
     }
 
-    return {
-      id: community.id,
-      name: community.name,
-      slug: community.slug,
-      type: community.type,
-      address: community.address,
-      coverId: community.cover_id,
-      updatedAt: community?.updated_at,
-      createdAt: community.created_at,
-    };
+    return mapRowToCommunity(community);
   }
 
   async findBySlug(slug: string): Promise<Community | null> {
     const community = await this.d1
       .prepare(
-        `SELECT id, name, slug, type, address, cover_id, updated_at, created_at
+        `SELECT ${SELECT_COMMUNITIES_FIELDS}
          FROM communities 
          WHERE slug = ?`,
       )
       .bind(slug)
-      .first<{
-        id: string;
-        name: string;
-        slug: string;
-        type: 'chapel' | 'parish_church';
-        address: string;
-        cover_id: string;
-        updated_at: string;
-        created_at: string;
-      }>();
+      .first<CommunityRow>();
 
     if (!community) {
       return null;
     }
 
-    return {
-      id: community.id,
-      name: community.name,
-      slug: community.slug,
-      type: community.type,
-      address: community.address,
-      coverId: community.cover_id,
-      updatedAt: community?.updated_at,
-      createdAt: community.created_at,
-    };
+    return mapRowToCommunity(community);
   }
 
   async findByName(name: string): Promise<Community | null> {
     const community = await this.d1
       .prepare(
-        `SELECT id, name, slug, type, address, cover_id, updated_at, created_at
+        `SELECT ${SELECT_COMMUNITIES_FIELDS}
          FROM communities 
          WHERE name = ?`,
       )
       .bind(name)
-      .first<{
-        id: string;
-        name: string;
-        slug: string;
-        type: 'chapel' | 'parish_church';
-        address: string;
-        cover_id: string;
-        updated_at: string;
-        created_at: string;
-      }>();
+      .first<CommunityRow>();
 
     if (!community) {
       return null;
     }
 
-    return {
-      id: community.id,
-      name: community.name,
-      slug: community.slug,
-      type: community.type,
-      address: community.address,
-      coverId: community.cover_id,
-      updatedAt: community?.updated_at,
-      createdAt: community.created_at,
-    };
+    return mapRowToCommunity(community);
   }
 
   async findParish(): Promise<Community | null> {
     const community = await this.d1
       .prepare(
-        `SELECT id, name, slug, type, address, cover_id, updated_at, created_at
+        `SELECT ${SELECT_COMMUNITIES_FIELDS}
          FROM communities 
          WHERE type = ?`,
       )
       .bind('parish_church')
-      .first<{
-        id: string;
-        name: string;
-        slug: string;
-        type: 'parish_church';
-        address: string;
-        cover_id: string;
-        updated_at: string;
-        created_at: string;
-      }>();
+      .first<CommunityRow>();
 
     if (!community) {
       return null;
     }
 
-    return {
-      id: community.id,
-      name: community.name,
-      slug: community.slug,
-      type: community.type,
-      address: community.address,
-      coverId: community.cover_id,
-      updatedAt: community?.updated_at,
-      createdAt: community.created_at,
-    };
+    return mapRowToCommunity(community);
   }
 
   async findAll(): Promise<Community[]> {
     const communities = await this.d1
       .prepare(
-        `SELECT id, name, slug, type, address, cover_id, updated_at, created_at
+        `SELECT ${SELECT_COMMUNITIES_FIELDS}
          FROM communities`,
       )
-      .all<{
-        id: string;
-        name: string;
-        slug: string;
-        type: 'chapel' | 'parish_church';
-        address: string;
-        cover_id: string;
-        updated_at: string;
-        created_at: string;
-      }>();
+      .all<CommunityRow>();
 
-    return communities.results.map((community) => ({
-      id: community.id,
-      name: community.name,
-      slug: community.slug,
-      type: community.type,
-      address: community.address,
-      coverId: community.cover_id,
-      updatedAt: community?.updated_at,
-      createdAt: community.created_at,
-    }));
+    return communities.results.map(mapRowToCommunity);
   }
 
   async create({
@@ -184,6 +146,16 @@ export class D1CommunitiesDAF implements CommunitiesDAF {
     type,
     address,
     coverId,
+    heroSubtitle,
+    aboutTitle,
+    aboutDescription,
+    historySummary,
+    patronName,
+    patronDescription,
+    patronPhotoId,
+    phone,
+    email,
+    officeHours,
     createdAt,
   }: {
     id: string;
@@ -192,31 +164,72 @@ export class D1CommunitiesDAF implements CommunitiesDAF {
     type: 'chapel' | 'parish_church';
     address: string;
     coverId: string;
+    heroSubtitle?: string;
+    aboutTitle?: string;
+    aboutDescription?: string;
+    historySummary?: string;
+    patronName?: string;
+    patronDescription?: string;
+    patronPhotoId?: string;
+    phone?: string;
+    email?: string;
+    officeHours?: string;
     createdAt: string;
   }) {
     await this.d1
       .prepare(
-        `INSERT INTO communities (id, name, slug, type, address, cover_id, created_at) 
-         VALUES (?, ?, ?, ?, ?, ?, ?)`,
+        `INSERT INTO communities (
+          id, name, slug, type, address, cover_id,
+          hero_subtitle, about_title, about_description, history_summary,
+          patron_name, patron_description, patron_photo_id,
+          phone, email, office_hours,
+          created_at
+        ) 
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       )
-      .bind(id, name, slug, type, address, coverId, createdAt)
-      .first<{
-        id: string;
-        name: string;
-        slug: string;
-        type: 'chapel' | 'parish_church';
-        address: string;
-        cover_id: string;
-        created_at: string;
-      }>();
+      .bind(
+        id,
+        name,
+        slug,
+        type,
+        address,
+        coverId,
+        heroSubtitle ?? null,
+        aboutTitle ?? null,
+        aboutDescription ?? null,
+        historySummary ?? null,
+        patronName ?? null,
+        patronDescription ?? null,
+        patronPhotoId ?? null,
+        phone ?? null,
+        email ?? null,
+        officeHours ?? null,
+        createdAt,
+      )
+      .run();
   }
 
   async save(data: Community) {
     await this.d1
       .prepare(
         `UPDATE communities 
-       SET name = ?, slug = ?, type = ?, address = ?, cover_id = ?, updated_at = ?
-       WHERE id = ?`,
+         SET name = ?,
+             slug = ?,
+             type = ?,
+             address = ?,
+             cover_id = ?,
+             hero_subtitle = ?,
+             about_title = ?,
+             about_description = ?,
+             history_summary = ?,
+             patron_name = ?,
+             patron_description = ?,
+             patron_photo_id = ?,
+             phone = ?,
+             email = ?,
+             office_hours = ?,
+             updated_at = ?
+         WHERE id = ?`,
       )
       .bind(
         data.name,
@@ -224,6 +237,16 @@ export class D1CommunitiesDAF implements CommunitiesDAF {
         data.type,
         data.address,
         data.coverId,
+        data.heroSubtitle ?? null,
+        data.aboutTitle ?? null,
+        data.aboutDescription ?? null,
+        data.historySummary ?? null,
+        data.patronName ?? null,
+        data.patronDescription ?? null,
+        data.patronPhotoId ?? null,
+        data.phone ?? null,
+        data.email ?? null,
+        data.officeHours ?? null,
         data.updatedAt,
         data.id,
       )
