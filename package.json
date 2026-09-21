@@ -8,6 +8,7 @@
     "test": "vitest run --dir tests/use-cases",
     "test:watch": "vitest --dir tests/use-cases",
     "dev": "wrangler dev --local",
+    "logs:staging": "wrangler tail --env staging",
     "deploy": "wrangler deploy --minify --env production",
     "deploy:staging": "wrangler deploy --minify --env staging",
     "build": "wrangler build",
