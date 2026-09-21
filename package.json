@@ -11,6 +11,8 @@
     "deploy": "wrangler deploy --minify --env production",
     "deploy:staging": "wrangler deploy --minify --env staging",
     "build": "wrangler build",
+    "build:staging": "wrangler build --env staging",
+    "build:production": "wrangler build --env production",
     "cf-typegen": "wrangler types --env-interface CloudflareBindings",
     "db:init": "npx wrangler d1 execute parish-db-dev --local --file=./migrations/0001-init-db.sql",
     "lint": "eslint . --ext .ts --fix",
