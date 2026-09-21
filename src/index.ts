@@ -25,7 +25,7 @@ const app = new Hono<{ Bindings: Bindings; Variables: Variables }>({
 app.get('/health', health);
 app.route('/', docsRoutes);
 
-app.use(corsSetup, withDictionary, parseBody);
+app.use('*', corsSetup, withDictionary, parseBody);
 
 app.route('/', userRoutes);
 app.route('/', attachmentsRoutes);
