@@ -36,7 +36,7 @@ INSERT INTO parish_contact (
   'R. Edson dos Santos, 30 — Morro do Algodão, Caraguatatuba - SP, 11671-180',
   'Terça a sexta-feira: 09h às 12h e 14h às 17h40' || char(10) || 'Sábado: 08h às 12h',
   'https://www.instagram.com/paroquiasaojosecaragua/',
-  'https://www.youtube.com/@paroquiasaojosecaragua',
+  'https://www.youtube.com/@ParóquiaSãoJoséCaraguatatuba',
   'https://www.facebook.com/parsaojose/?locale=pt_BR',
   'https://wa.me/5512981705757',
   CURRENT_TIMESTAMP

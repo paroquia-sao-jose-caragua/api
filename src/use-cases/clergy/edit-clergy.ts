@@ -1,22 +1,20 @@
-import type { Clergy } from '@/entities/clergy';
+import type { Clergy, ClergyPosition } from '@/entities/clergy';
 import type { AttachmentsDAF } from '@/services/database/attachments-daf';
 import type { ClergyDAF } from '@/services/database/clergy-daf';
-import { ClergyPositionAlreadyExistsError } from '../errors/clergy-position-already-exists-error';
-import { AttachmentNotFoundError } from '../errors/attachment-not-found-error';
 import { makeSlug } from '../factories/make-slug';
-import { NameAlreadyExistsError } from '../errors/name-already-exists-error';
 import { ResourceNotFoundError } from '../errors/resource-not-found-error';
 
 interface EditClergyUseCaseRequest {
   clergyId: string;
-  title: string;
+  title?: string | null;
   name: string;
-  position:
-    | 'supreme_pontiff'
-    | 'diocesan_bishop'
-    | 'parish_priest'
-    | 'permanent_deacon';
-  photoId: string;
+  position: ClergyPosition;
+  roleName?: string | null;
+  shortIntro?: string | null;
+  bio?: string | null;
+  orderIndex?: number;
+  isMain?: boolean;
+  photoId?: string | null;
 }
 
 interface EditClergyUseCaseResponse {
@@ -34,6 +32,11 @@ export class EditClergyUseCase {
     title,
     name,
     position,
+    roleName,
+    shortIntro,
+    bio,
+    orderIndex = 0,
+    isMain = false,
     photoId,
   }: EditClergyUseCaseRequest): Promise<EditClergyUseCaseResponse> {
     const clergy = await this.clergyDaf.findById(clergyId);
@@ -42,44 +45,28 @@ export class EditClergyUseCase {
       throw new ResourceNotFoundError();
     }
 
-    if (
-      clergy.position !== position &&
-      ['supreme_pontiff', 'diocesan_bishop', 'parish_priest'].includes(position)
-    ) {
-      const clergyWithSamePosition =
-        await this.clergyDaf.findByPosition(position);
-
-      if (clergyWithSamePosition) {
-        throw new ClergyPositionAlreadyExistsError();
-      }
-    }
-
-    if (clergy.name !== name && position === 'permanent_deacon') {
-      const clergyWithSameName = await this.clergyDaf.findByName(name);
-
-      if (clergyWithSameName) {
-        throw new NameAlreadyExistsError();
-      }
-    }
-
-    if (clergy.photoId !== photoId) {
+    if (photoId && photoId !== clergy.photoId) {
       const attachment = await this.attachmentsDaf.findById(photoId);
-
-      if (!attachment) {
-        throw new AttachmentNotFoundError();
+      if (attachment) {
+        if (clergy.photoId) {
+          await this.attachmentsDaf.save(clergy.photoId, { status: 'deleted' });
+        }
+        await this.attachmentsDaf.save(attachment.id, { status: 'attached' });
       }
-
-      await Promise.all([
-        this.attachmentsDaf.save(clergy.photoId, { status: 'deleted' }),
-        this.attachmentsDaf.save(attachment.id, { status: 'attached' }),
-      ]);
     }
 
-    clergy.title = title;
+    clergy.title = title || null;
     clergy.name = name;
-    clergy.slug = makeSlug(title.concat(' ', name));
+    clergy.slug = makeSlug((title ? `${title} ` : '') + name);
     clergy.position = position;
-    clergy.photoId = photoId;
+    clergy.roleName = roleName || null;
+    clergy.shortIntro = shortIntro || null;
+    clergy.bio = bio || null;
+    clergy.orderIndex = orderIndex;
+    clergy.isMain = isMain;
+    if (photoId !== undefined) {
+      clergy.photoId = photoId || null;
+    }
     clergy.updatedAt = new Date().toISOString();
 
     await this.clergyDaf.save(clergy);

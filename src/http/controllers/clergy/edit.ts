@@ -1,9 +1,6 @@
 import { getAppContext } from '@/http/utils/getAppContext';
 import { useClergySchema } from '@/schemas/use-clergy-schema';
-import { AttachmentNotFoundError } from '@/use-cases/errors/attachment-not-found-error';
 import { makeEditClergyUseCase } from '@/use-cases/factories/clergy/make-edit-clergy-use-case';
-import { ClergyPositionAlreadyExistsError } from '@/use-cases/errors/clergy-position-already-exists-error';
-import { NameAlreadyExistsError } from '@/use-cases/errors/name-already-exists-error';
 import { ResourceNotFoundError } from '@/use-cases/errors/resource-not-found-error';
 
 export const editClergy: ControllerFn = async (c) => {
@@ -11,40 +8,37 @@ export const editClergy: ControllerFn = async (c) => {
 
   const validationSchema = useClergySchema(t);
 
-  const { name, title, position, photoId } = validationSchema.parse(inputs);
+  const data = validationSchema.parse(inputs);
 
-  const { id } = params;
+  const id = params.id || (inputs as Record<string, unknown>).id as string;
 
   try {
     const editUseCase = makeEditClergyUseCase(c);
 
     const { clergy } = await editUseCase.execute({
       clergyId: id,
-      name,
-      title,
-      position,
-      photoId,
+      name: data.name,
+      title: data.title,
+      position: data.position,
+      roleName: data.roleName,
+      shortIntro: data.shortIntro,
+      bio: data.bio,
+      orderIndex: data.orderIndex,
+      isMain: data.isMain,
+      photoId: data.photoId,
     });
 
-    return c.json({ clergy });
+    return c.json({
+      clergy: {
+        ...clergy,
+        photoUrl: clergy.photoId
+          ? `${c.env.S3_API_URL}/${clergy.photoId}`
+          : null,
+      },
+    });
   } catch (err) {
     if (err instanceof ResourceNotFoundError) {
       return c.json({ message: t('error-clergy-not-found') }, 404);
-    }
-
-    if (err instanceof ClergyPositionAlreadyExistsError) {
-      return c.json(
-        { message: t('error-clergy-position-already-in-use') },
-        400,
-      );
-    }
-
-    if (err instanceof NameAlreadyExistsError) {
-      return c.json({ message: t('error-clergy-name-already-in-use') }, 400);
-    }
-
-    if (err instanceof AttachmentNotFoundError) {
-      return c.json({ message: t('error-cover-not-uploaded-yet') }, 400);
     }
 
     throw err;

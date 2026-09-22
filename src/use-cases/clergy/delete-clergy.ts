@@ -19,7 +19,9 @@ export class DeleteClergyUseCase {
       throw new ResourceNotFoundError();
     }
 
-    await this.attachmentsDaf.save(clergy.photoId, { status: 'deleted' });
+    if (clergy.photoId) {
+      await this.attachmentsDaf.save(clergy.photoId, { status: 'deleted' });
+    }
     await this.clergyDaf.delete(clergyId);
   }
 }
