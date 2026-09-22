@@ -34,6 +34,9 @@ export class GetCommunityBySlugUseCase {
             community: {
                 ...community,
                 address: parishContact?.address || community.address,
+                phone: parishContact?.phone || community.phone,
+                email: parishContact?.email || community.email,
+                officeHours: parishContact?.officeHours || community.officeHours,
                 photos,
                 massSchedules: massSchedules.filter((ms) => ms.active && ms.type !== 'solemnity'),
             },
