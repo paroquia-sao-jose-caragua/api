@@ -33,7 +33,6 @@ export class GetCommunityBySlugUseCase {
         return {
             community: {
                 ...community,
-                address: parishContact?.address || community.address,
                 phone: parishContact?.phone || community.phone,
                 email: parishContact?.email || community.email,
                 officeHours: parishContact?.officeHours || community.officeHours,
