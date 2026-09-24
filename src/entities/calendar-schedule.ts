@@ -7,7 +7,7 @@ type MassSchedule = {
   orientations?: string;
   isPrecept: boolean;
   startTime: string;
-  endTime: string;
+  endTime?: string;
   cancellationReason?: string;
   community: {
     id: string;

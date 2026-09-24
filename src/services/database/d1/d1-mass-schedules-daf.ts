@@ -42,14 +42,14 @@ export class D1MassSchedulesDAF implements MassSchedulesDAF {
         id: string;
         schedule_id: string;
         start_time: string;
-        end_time: string;
+        end_time: string | null;
       }>();
 
     const times = timesRows.results.map((row) => ({
       id: row.id,
       scheduleId: row.schedule_id,
       startTime: row.start_time,
-      endTime: row.end_time,
+      endTime: row.end_time ?? undefined,
     }));
 
     return {
@@ -125,12 +125,12 @@ export class D1MassSchedulesDAF implements MassSchedulesDAF {
         id: string;
         schedule_id: string;
         start_time: string;
-        end_time: string;
+        end_time: string | null;
       }>();
 
     const timesByScheduleId = new Map<
       string,
-      { id: string; scheduleId: string; startTime: string; endTime: string }[]
+      { id: string; scheduleId: string; startTime: string; endTime?: string }[]
     >();
 
     for (const timeRow of timesRows.results) {
@@ -139,7 +139,7 @@ export class D1MassSchedulesDAF implements MassSchedulesDAF {
         id: timeRow.id,
         scheduleId: timeRow.schedule_id,
         startTime: timeRow.start_time,
-        endTime: timeRow.end_time,
+        endTime: timeRow.end_time ?? undefined,
       });
       timesByScheduleId.set(timeRow.schedule_id, scheduleTimes);
     }
@@ -203,12 +203,12 @@ export class D1MassSchedulesDAF implements MassSchedulesDAF {
         id: string;
         schedule_id: string;
         start_time: string;
-        end_time: string;
+        end_time: string | null;
       }>();
 
     const timesByScheduleId = new Map<
       string,
-      { id: string; scheduleId: string; startTime: string; endTime: string }[]
+      { id: string; scheduleId: string; startTime: string; endTime?: string }[]
     >();
 
     for (const timeRow of timesRows.results) {
@@ -217,7 +217,7 @@ export class D1MassSchedulesDAF implements MassSchedulesDAF {
         id: timeRow.id,
         scheduleId: timeRow.schedule_id,
         startTime: timeRow.start_time,
-        endTime: timeRow.end_time,
+        endTime: timeRow.end_time ?? undefined,
       });
       timesByScheduleId.set(timeRow.schedule_id, scheduleTimes);
     }
@@ -312,7 +312,7 @@ export class D1MassSchedulesDAF implements MassSchedulesDAF {
           .prepare(
             'INSERT INTO mass_schedule_times (id, schedule_id, start_time, end_time) VALUES (?, ?, ?, ?)',
           )
-          .bind(time.id, time.scheduleId, time.startTime, time.endTime),
+          .bind(time.id, time.scheduleId, time.startTime, time.endTime ?? null),
       );
     }
 
@@ -375,7 +375,7 @@ export class D1MassSchedulesDAF implements MassSchedulesDAF {
           .prepare(
             'INSERT INTO mass_schedule_times (id, schedule_id, start_time, end_time) VALUES (?, ?, ?, ?)',
           )
-          .bind(time.id, time.scheduleId, time.startTime, time.endTime),
+          .bind(time.id, time.scheduleId, time.startTime, time.endTime ?? null),
       );
     }
 

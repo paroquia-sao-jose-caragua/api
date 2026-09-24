@@ -69,14 +69,19 @@ export function useMassScheduleSchema(t: TranslatorFn) {
               },
               { message: t('invalid-time-format') },
             ),
-            endTime: z.string().refine(
-              (time) => {
-                if (!time) return true;
-                const timeRegex = /^([0-1]\d|2[0-3]):([0-5]\d)$/;
-                return timeRegex.test(time);
-              },
-              { message: t('invalid-time-format') },
-            ),
+            endTime: z
+              .string()
+              .nullable()
+              .optional()
+              .refine(
+                (time) => {
+                  if (!time) return true;
+                  const timeRegex = /^([0-1]\d|2[0-3]):([0-5]\d)$/;
+                  return timeRegex.test(time);
+                },
+                { message: t('invalid-time-format') },
+              )
+              .transform((val) => (val && val.trim() !== '' ? val : undefined)),
           }),
         )
         .min(1, t('error-at-least-one-time-required')),
