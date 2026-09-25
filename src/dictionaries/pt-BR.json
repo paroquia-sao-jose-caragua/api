@@ -96,5 +96,7 @@
   "error-cannot-suspend-last-admin": "Não é possível suspender o único administrador ativo do sistema.",
   "sessions-revoked-success": "Sessões ativas do usuário foram revogadas com sucesso.",
   "admin-password-reset-success": "Solicitação de redefinição processada com sucesso.",
-  "invalid-status": "Status de usuário inválido."
+  "invalid-status": "Status de usuário inválido.",
+  "invite-resent-success": "Convite reenviado com sucesso.",
+  "user-not-pending": "O convite só pode ser reenviado para usuários com status pendente."
 }

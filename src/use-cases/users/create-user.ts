@@ -39,7 +39,7 @@ export class CreateUserUseCase {
     const existing = await this.usersDaf.findByEmail(email);
 
     if (existing) {
-      throw new ResourceAlreadyExistsError('User already exists');
+      throw new ResourceAlreadyExistsError();
     }
 
     const id = ulid();

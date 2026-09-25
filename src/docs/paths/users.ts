@@ -160,4 +160,47 @@ export const userPaths = {
       },
     },
   },
+  '/users/{id}/resend-invite': {
+    post: {
+      summary: 'Reenvia convite para usuário pendente',
+      description:
+        'Gera um novo token de convite válido por 48 horas e dispara o e-mail de acesso. Apenas para usuários com status pendente.',
+      tags: ['Users'],
+      parameters: [
+        {
+          name: 'id',
+          in: 'path',
+          required: true,
+          description: 'ID do usuário pendente',
+          schema: {
+            type: 'string',
+          },
+        },
+      ],
+      responses: {
+        200: {
+          description: 'Convite reenviado com sucesso',
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                properties: {
+                  message: {
+                    type: 'string',
+                    example: 'Convite reenviado com sucesso.',
+                  },
+                },
+              },
+            },
+          },
+        },
+        400: {
+          description: 'Usuário não possui status pendente',
+        },
+        404: {
+          description: 'Usuário não encontrado',
+        },
+      },
+    },
+  },
 };

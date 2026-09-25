@@ -11,6 +11,7 @@ import { updateUserRole } from './update-user-role';
 import { updateUserStatus } from './update-user-status';
 import { revokeSessions } from './revoke-sessions';
 import { adminResetPassword } from './admin-reset-password';
+import { resendUserInvite } from './resend-user-invite';
 import { verifyToken } from '@/http/middlewares/verifyToken';
 import { verifyUserRole } from '@/http/middlewares/verifyUserRole';
 
@@ -33,5 +34,6 @@ app.patch('/users/:id/role', verifyToken, verifyUserRole('admin'), updateUserRol
 app.patch('/users/:id/status', verifyToken, verifyUserRole('admin'), updateUserStatus);
 app.post('/users/:id/revoke-sessions', verifyToken, verifyUserRole('admin'), revokeSessions);
 app.post('/users/:id/reset-password', verifyToken, verifyUserRole('admin'), adminResetPassword);
+app.post('/users/:id/resend-invite', verifyToken, verifyUserRole('admin'), resendUserInvite);
 
 export { app as userRoutes };
