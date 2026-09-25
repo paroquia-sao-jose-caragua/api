@@ -45,34 +45,32 @@ export class ListCalendarUseCase {
     let calendar: CalendarSchedule[] = [];
 
     for (let day = firstDayOfMonth; day <= lastDayOfMonth; day++) {
-      const date = moment()
-        .month(month - 1)
-        .date(day)
-        .format('YYYY-MM-DD');
+      const currentDate = moment({
+        year: baseYear,
+        month: month - 1,
+        date: day,
+      });
+      const date = currentDate.format('YYYY-MM-DD');
 
-      const weekday = moment(date).weekday();
+      const weekday = currentDate.weekday();
 
       let massSchedulesInDate = massSchedules.filter((schedule) => {
-        if (!schedule.active) return;
+        if (!schedule.active) return false;
 
         const scheduleStart = schedule.startDate
-          ? moment(schedule.startDate)
+          ? moment(schedule.startDate).startOf('day')
           : null;
 
-        const scheduleEnd = schedule.endDate ? moment(schedule.endDate) : null;
+        const scheduleEnd = schedule.endDate
+          ? moment(schedule.endDate).endOf('day')
+          : null;
 
-        const now = moment();
-
-        if (!schedule.active) {
-          return;
+        if (scheduleStart && currentDate.isBefore(scheduleStart)) {
+          return false;
         }
 
-        if (scheduleStart && now.isBefore(scheduleStart, 'month')) {
-          return;
-        }
-
-        if (scheduleEnd && now.isAfter(scheduleEnd, 'month')) {
-          return;
+        if (scheduleEnd && currentDate.isAfter(scheduleEnd)) {
+          return false;
         }
 
         if (schedule.recurrenceType === 'yearly') {
@@ -94,6 +92,10 @@ export class ListCalendarUseCase {
               schedule.dayOfWeek,
               schedule.weekOfMonth,
             );
+          }
+
+          if (schedule.dayOfMonth !== undefined) {
+            return schedule.dayOfMonth === day;
           }
         }
 
