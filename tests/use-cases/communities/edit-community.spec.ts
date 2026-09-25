@@ -65,9 +65,6 @@ describe('Edit Community Use Case', () => {
       patronName: 'Nossa Senhora',
       patronDescription: 'Mãe de Jesus',
       patronPhotoId,
-      phone: '(12) 3888-0000',
-      email: 'comunidade@paroquia.org.br',
-      officeHours: 'Segunda a Sexta 8h às 17h',
       photos: [
         {
           photoId: galleryPhotoId,

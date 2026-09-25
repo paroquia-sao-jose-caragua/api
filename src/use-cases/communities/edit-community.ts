@@ -22,9 +22,6 @@ interface EditCommunityUseCaseRequest {
   patronName?: string | null;
   patronDescription?: string | null;
   patronPhotoId?: string | null;
-  phone?: string | null;
-  email?: string | null;
-  officeHours?: string | null;
   photos?: {
     id?: string;
     photoId: string;
@@ -57,9 +54,6 @@ export class EditCommunityUseCase {
     patronName,
     patronDescription,
     patronPhotoId,
-    phone,
-    email,
-    officeHours,
     photos,
   }: EditCommunityUseCaseRequest): Promise<EditCommunityUseCaseResponse> {
     const community = await this.communitiesDaf.findById(id);
@@ -160,9 +154,6 @@ export class EditCommunityUseCase {
     if (patronName !== undefined) community.patronName = patronName;
     if (patronDescription !== undefined) community.patronDescription = patronDescription;
     if (patronPhotoId !== undefined) community.patronPhotoId = patronPhotoId || undefined;
-    if (phone !== undefined) community.phone = phone;
-    if (email !== undefined) community.email = email;
-    if (officeHours !== undefined) community.officeHours = officeHours;
     community.updatedAt = new Date().toISOString();
 
     await this.communitiesDaf.save(community);

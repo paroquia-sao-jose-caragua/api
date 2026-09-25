@@ -20,9 +20,6 @@ export interface CommunitiesDAF {
     patronName?: string;
     patronDescription?: string;
     patronPhotoId?: string;
-    phone?: string;
-    email?: string;
-    officeHours?: string;
     createdAt: string;
   }): Promise<void>;
   save: (community: Community) => Promise<void>;

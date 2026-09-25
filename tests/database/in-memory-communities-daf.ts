@@ -24,6 +24,16 @@ export class InMemoryCommunitiesDAF implements CommunitiesDAF {
     return community;
   }
 
+  async findBySlug(slug: string): Promise<Community | null> {
+    const community = this.communities.find((c) => c.slug === slug);
+
+    if (!community) {
+      return null;
+    }
+
+    return community;
+  }
+
   async findParish(): Promise<Community | null> {
     const community = this.communities.find((c) => c.type === 'parish_church');
 

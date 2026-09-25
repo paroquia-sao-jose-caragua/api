@@ -15,9 +15,6 @@ type CommunityRow = {
   patron_name: string | null;
   patron_description: string | null;
   patron_photo_id: string | null;
-  phone: string | null;
-  email: string | null;
-  office_hours: string | null;
   updated_at: string | null;
   created_at: string;
 };
@@ -37,9 +34,6 @@ function mapRowToCommunity(row: CommunityRow): Community {
     patronName: row.patron_name ?? undefined,
     patronDescription: row.patron_description ?? undefined,
     patronPhotoId: row.patron_photo_id ?? undefined,
-    phone: row.phone ?? undefined,
-    email: row.email ?? undefined,
-    officeHours: row.office_hours ?? undefined,
     updatedAt: row.updated_at ?? undefined,
     createdAt: row.created_at,
   };
@@ -49,7 +43,6 @@ const SELECT_COMMUNITIES_FIELDS = `
   id, name, slug, type, address, cover_id,
   hero_subtitle, about_title, about_description, history_summary,
   patron_name, patron_description, patron_photo_id,
-  phone, email, office_hours,
   updated_at, created_at
 `;
 
@@ -153,9 +146,6 @@ export class D1CommunitiesDAF implements CommunitiesDAF {
     patronName,
     patronDescription,
     patronPhotoId,
-    phone,
-    email,
-    officeHours,
     createdAt,
   }: {
     id: string;
@@ -171,9 +161,6 @@ export class D1CommunitiesDAF implements CommunitiesDAF {
     patronName?: string;
     patronDescription?: string;
     patronPhotoId?: string;
-    phone?: string;
-    email?: string;
-    officeHours?: string;
     createdAt: string;
   }) {
     await this.d1
@@ -182,10 +169,9 @@ export class D1CommunitiesDAF implements CommunitiesDAF {
           id, name, slug, type, address, cover_id,
           hero_subtitle, about_title, about_description, history_summary,
           patron_name, patron_description, patron_photo_id,
-          phone, email, office_hours,
           created_at
         ) 
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       )
       .bind(
         id,
@@ -201,9 +187,6 @@ export class D1CommunitiesDAF implements CommunitiesDAF {
         patronName ?? null,
         patronDescription ?? null,
         patronPhotoId ?? null,
-        phone ?? null,
-        email ?? null,
-        officeHours ?? null,
         createdAt,
       )
       .run();
@@ -225,9 +208,6 @@ export class D1CommunitiesDAF implements CommunitiesDAF {
              patron_name = ?,
              patron_description = ?,
              patron_photo_id = ?,
-             phone = ?,
-             email = ?,
-             office_hours = ?,
              updated_at = ?
          WHERE id = ?`,
       )
@@ -244,9 +224,6 @@ export class D1CommunitiesDAF implements CommunitiesDAF {
         data.patronName ?? null,
         data.patronDescription ?? null,
         data.patronPhotoId ?? null,
-        data.phone ?? null,
-        data.email ?? null,
-        data.officeHours ?? null,
         data.updatedAt,
         data.id,
       )
