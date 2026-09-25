@@ -98,5 +98,16 @@
   "admin-password-reset-success": "Solicitação de redefinição processada com sucesso.",
   "invalid-status": "Status de usuário inválido.",
   "invite-resent-success": "Convite reenviado com sucesso.",
-  "user-not-pending": "O convite só pode ser reenviado para usuários com status pendente."
+  "user-not-pending": "O convite só pode ser reenviado para usuários com status pendente.",
+  "error-appointment-not-found": "Agendamento não encontrado.",
+  "error-appointment-slot-unavailable": "Este horário já foi preenchido ou não está mais disponível. Por favor, escolha outro horário.",
+  "error-service-not-found": "Serviço de atendimento não encontrado.",
+  "error-pastoral-agent-not-found": "Agente pastoral não encontrado.",
+  "error-address-required-for-service": "O endereço completo é obrigatório para este tipo de atendimento.",
+  "error-cancellation-reason-required": "O motivo do cancelamento é obrigatório.",
+  "appointment-created-successfully": "Agendamento realizado com sucesso.",
+  "appointment-cancelled-successfully": "Agendamento cancelado com sucesso.",
+  "appointment-status-updated-successfully": "Status do agendamento atualizado com sucesso.",
+  "error-appointments-disabled": "Os agendamentos estão temporariamente suspensos pela paróquia.",
+  "appointment-settings-updated-successfully": "Configurações de agendamento atualizadas com sucesso."
 }
