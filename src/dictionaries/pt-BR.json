@@ -84,5 +84,17 @@
   "required-refresh-token": "Token de atualização é obrigatório.",
   "resource-not-found": "Recurso não encontrado.",
   "unauthorized": "Não autorizado.",
-  "unsupported-file-format": "Formato de arquivo não suportado. Os formatos suportados são: {{formats}}."
+  "unsupported-file-format": "Formato de arquivo não suportado. Os formatos suportados são: {{formats}}.",
+  "forgot-password-email-sent": "Se o e-mail informado estiver cadastrado, as instruções para redefinição de senha foram enviadas.",
+  "password-reset-success": "Senha redefinida com sucesso. Você já pode fazer login com sua nova senha.",
+  "password-changed-success": "Senha alterada com sucesso.",
+  "invalid-or-expired-token": "O link de redefinição de senha é inválido ou expirou.",
+  "invalid-current-password": "A senha atual informada está incorreta.",
+  "user-not-found": "Usuário não encontrado.",
+  "user-suspended-or-inactive": "Sua conta está suspensa ou inativa. Entre em contato com a administração.",
+  "error-cannot-demote-last-admin": "Não é possível alterar o papel do único administrador ativo do sistema.",
+  "error-cannot-suspend-last-admin": "Não é possível suspender o único administrador ativo do sistema.",
+  "sessions-revoked-success": "Sessões ativas do usuário foram revogadas com sucesso.",
+  "admin-password-reset-success": "Solicitação de redefinição processada com sucesso.",
+  "invalid-status": "Status de usuário inválido."
 }

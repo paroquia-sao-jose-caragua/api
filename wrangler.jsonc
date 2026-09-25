@@ -14,6 +14,7 @@
     "PANEL_BASE_URL": "http://localhost:3000",
     "SITE_BASE_URL": "http://localhost:3001",
     "S3_API_URL": "http://localhost:3333/attachments",
+    "RESEND_FROM_EMAIL": "Paróquia São José <nao-responda@paroquiasaojosecaragua.org.br>"
   },
   "d1_databases": [
     {

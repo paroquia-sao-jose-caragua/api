@@ -17,9 +17,12 @@ export const useUserSchema = (t: TranslatorFn) => {
         },
       )
       .min(1, t('required-field')),
-    role: z.enum(['admin', 'user', 'viewer'], {
-      message: t('invalid-role'),
-    }),
+    role: z.enum(
+      ['admin', 'secretary', 'user', 'pastoral_agent', 'viewer'],
+      {
+        message: t('invalid-role'),
+      },
+    ),
   });
 
   return userSchema;
