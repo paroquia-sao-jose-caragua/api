@@ -1,14 +1,24 @@
+export type ClergyPosition =
+  | 'supreme_pontiff'
+  | 'diocesan_bishop'
+  | 'parish_priest'
+  | 'permanent_deacon'
+  | 'vicar'
+  | 'other';
+
 export type Clergy = {
   id: string;
-  title: string;
+  title?: string | null;
   name: string;
   slug: string;
-  position:
-    | 'supreme_pontiff'
-    | 'diocesan_bishop'
-    | 'parish_priest'
-    | 'permanent_deacon';
-  photoId: string;
+  position: ClergyPosition;
+  roleName?: string | null;
+  shortIntro?: string | null;
+  bio?: string | null;
+  orderIndex?: number;
+  isMain?: boolean;
+  photoId?: string | null;
+  photoUrl?: string | null;
   createdAt: string;
-  updatedAt?: string;
+  updatedAt?: string | null;
 };

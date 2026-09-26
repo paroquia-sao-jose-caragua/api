@@ -17,7 +17,7 @@ interface CreateMassScheduleUseCaseRequest {
   monthOfYear?: number;
   startDate?: string;
   endDate?: string;
-  times: { startTime: string; endTime: string }[]; // Array de horários no formato "HH:MM"
+  times: { startTime: string; endTime?: string }[]; // Array de horários no formato "HH:MM"
 }
 
 interface CreateMassScheduleUseCaseResponse {

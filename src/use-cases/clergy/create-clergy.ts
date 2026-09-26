@@ -1,21 +1,19 @@
-import type { Clergy } from '@/entities/clergy';
+import type { Clergy, ClergyPosition } from '@/entities/clergy';
 import type { AttachmentsDAF } from '@/services/database/attachments-daf';
 import type { ClergyDAF } from '@/services/database/clergy-daf';
-import { ClergyPositionAlreadyExistsError } from '../errors/clergy-position-already-exists-error';
-import { AttachmentNotFoundError } from '../errors/attachment-not-found-error';
 import { ulid } from 'serverless-crypto-utils/id-generation';
 import { makeSlug } from '../factories/make-slug';
-import { NameAlreadyExistsError } from '../errors/name-already-exists-error';
 
 interface CreateClergyUseCaseRequest {
-  title: string;
+  title?: string | null;
   name: string;
-  position:
-    | 'supreme_pontiff'
-    | 'diocesan_bishop'
-    | 'parish_priest'
-    | 'permanent_deacon';
-  photoId: string;
+  position: ClergyPosition;
+  roleName?: string | null;
+  shortIntro?: string | null;
+  bio?: string | null;
+  orderIndex?: number;
+  isMain?: boolean;
+  photoId?: string | null;
 }
 
 interface CreateClergyUseCaseResponse {
@@ -32,42 +30,32 @@ export class CreateClergyUseCase {
     title,
     name,
     position,
+    roleName,
+    shortIntro,
+    bio,
+    orderIndex = 0,
+    isMain = false,
     photoId,
   }: CreateClergyUseCaseRequest): Promise<CreateClergyUseCaseResponse> {
-    if (
-      ['supreme_pontiff', 'diocesan_bishop', 'parish_priest'].includes(position)
-    ) {
-      const clergyWithSamePosition =
-        await this.clergyDaf.findByPosition(position);
-
-      if (clergyWithSamePosition) {
-        throw new ClergyPositionAlreadyExistsError();
+    if (photoId) {
+      const attachment = await this.attachmentsDaf.findById(photoId);
+      if (attachment) {
+        await this.attachmentsDaf.save(attachment.id, { status: 'attached' });
       }
     }
 
-    if (position === 'permanent_deacon') {
-      const clergyWithSameName = await this.clergyDaf.findByName(name);
-
-      if (clergyWithSameName) {
-        throw new NameAlreadyExistsError();
-      }
-    }
-
-    const attachment = await this.attachmentsDaf.findById(photoId);
-
-    if (!attachment) {
-      throw new AttachmentNotFoundError();
-    }
-
-    await this.attachmentsDaf.save(attachment.id, { status: 'attached' });
-
-    const clergy = {
+    const clergy: Clergy = {
       id: ulid(),
-      title,
+      title: title || null,
       name,
-      slug: makeSlug(title.concat(' ', name)),
+      slug: makeSlug((title ? `${title} ` : '') + name),
       position,
-      photoId: attachment.id,
+      roleName: roleName || null,
+      shortIntro: shortIntro || null,
+      bio: bio || null,
+      orderIndex,
+      isMain,
+      photoId: photoId || null,
       createdAt: new Date().toISOString(),
     };
 

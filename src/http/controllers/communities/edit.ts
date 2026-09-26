@@ -13,23 +13,21 @@ export const editCommunity: ControllerFn = async (c) => {
 
   const { id } = params;
 
-  const { name, type, address, coverId } = validationSchema.parse(inputs);
+  const parsedData = validationSchema.parse(inputs);
 
   try {
     const editUseCase = makeEditCommunityUseCase(c);
 
     const { community } = await editUseCase.execute({
       id,
-      name,
-      type,
-      address,
-      coverId,
+      ...parsedData,
     });
 
     return c.json({
       community: {
         ...community,
-        coverUrl: c.env.S3_API_URL.concat('/', community.coverId),
+        coverUrl: community.coverId ? `${c.env.S3_API_URL}/${community.coverId}` : undefined,
+        patronPhotoUrl: community.patronPhotoId ? `${c.env.S3_API_URL}/${community.patronPhotoId}` : undefined,
       },
     });
   } catch (err) {

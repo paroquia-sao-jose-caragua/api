@@ -1,5 +1,8 @@
 import type { Community } from "@/entities/community";
 import type { CommunitiesDAF } from "@/services/database/communities-daf";
+import type { CommunityPhotosDAF } from "@/services/database/community-photos-daf";
+import type { MassSchedulesDAF } from "@/services/database/mass-schedules-daf";
+import type { ParishContactDAF } from "@/services/database/parish-contact-daf";
 import { ResourceNotFoundError } from "../errors/resource-not-found-error";
 
 interface GetCommunityBySlugResponse {
@@ -7,15 +10,35 @@ interface GetCommunityBySlugResponse {
 }
 
 export class GetCommunityBySlugUseCase {
-    constructor(private communitiesDaf: CommunitiesDAF) {}
+    constructor(
+        private communitiesDaf: CommunitiesDAF,
+        private communityPhotosDaf: CommunityPhotosDAF,
+        private massSchedulesDaf: MassSchedulesDAF,
+        private parishContactDaf: ParishContactDAF,
+    ) {}
 
     async execute(slug: string): Promise<GetCommunityBySlugResponse> {
         const community = await this.communitiesDaf.findBySlug(slug);
 
         if (!community) {
-            throw new ResourceNotFoundError()
+            throw new ResourceNotFoundError();
         }
 
-        return {community}
+        const [photos, massSchedules, parishContact] = await Promise.all([
+            this.communityPhotosDaf.findByCommunityId(community.id),
+            this.massSchedulesDaf.findMany({ communityId: community.id }),
+            this.parishContactDaf.get(),
+        ]);
+
+        return {
+            community: {
+                ...community,
+                phone: parishContact?.phone,
+                email: parishContact?.email,
+                officeHours: parishContact?.officeHours,
+                photos,
+                massSchedules: massSchedules.filter((ms) => ms.active && ms.type !== 'solemnity'),
+            },
+        };
     }
 }

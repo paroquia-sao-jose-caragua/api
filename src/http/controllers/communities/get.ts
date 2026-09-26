@@ -15,7 +15,12 @@ export const getCommunityBySlug: ControllerFn = async (c) => {
         return c.json({
             community: {
                 ...community,
-                coverUrl: c.env.S3_API_URL.concat('/', community.coverId),
+                coverUrl: community.coverId ? `${c.env.S3_API_URL}/${community.coverId}` : undefined,
+                patronPhotoUrl: community.patronPhotoId ? `${c.env.S3_API_URL}/${community.patronPhotoId}` : undefined,
+                photos: (community.photos || []).map((photo) => ({
+                    ...photo,
+                    photoUrl: photo.photoId ? `${c.env.S3_API_URL}/${photo.photoId}` : undefined,
+                })),
             }
         });
     } catch (err) {

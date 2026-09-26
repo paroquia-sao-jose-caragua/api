@@ -1,6 +1,7 @@
 import type { UsersDAF } from '@/services/database/users-daf';
 import type { User } from '@/entities/user';
 import { InvalidCredentialsError } from '../errors/invalid-credentials-error';
+import { UserSuspendedError } from '../errors/user-suspended-error';
 import { verifyPassword } from 'serverless-crypto-utils/password-hashing';
 
 interface AuthenticateUseCaseRequest {
@@ -25,11 +26,19 @@ export class AuthenticateUseCase {
       throw new InvalidCredentialsError();
     }
 
+    if (user.status === 'suspended') {
+      throw new UserSuspendedError();
+    }
+
     const isValidPassword = await verifyPassword(password, user.passwordHash);
 
     if (!isValidPassword) {
       throw new InvalidCredentialsError();
     }
+
+    const now = new Date();
+    await this.usersDaf.updateLastLogin(user.id, now);
+    user.lastLoginAt = now;
 
     return { user };
   }

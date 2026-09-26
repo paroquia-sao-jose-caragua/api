@@ -16,7 +16,7 @@ export function makeCommunity({
 
   return {
     id: makeId(),
-    coverId: makeId(),
+    coverId: coverId ?? makeId(),
     name,
     slug,
     type: 'chapel',

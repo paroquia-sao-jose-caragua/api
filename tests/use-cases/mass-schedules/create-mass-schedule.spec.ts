@@ -129,6 +129,26 @@ describe('Create Mass Schedule Use Case', () => {
     expect(massSchedule.id).toBeDefined();
   });
 
+  it('should be able to create a mass schedule without endTime', async () => {
+    const { massSchedule } = await sut.execute({
+      communityId: community.id,
+      type: 'ordinary',
+      recurrenceType: 'weekly',
+      dayOfWeek: 6, // Saturday
+      times: [
+        {
+          startTime: '19:30',
+        },
+      ],
+      isPrecept: true,
+      active: true,
+    });
+
+    expect(massSchedule.id).toBeDefined();
+    expect(massSchedule.times[0].startTime).toBe('19:30');
+    expect(massSchedule.times[0].endTime).toBeUndefined();
+  });
+
   it('should not be able to create a mass schedule with a non-existing community', async () => {
     await expect(() =>
       sut.execute({

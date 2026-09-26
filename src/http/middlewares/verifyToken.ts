@@ -20,11 +20,44 @@ export const verifyToken = async (
     signingSecret: c.env.SIGNING_SECRET,
   });
 
-  if (result.success) {
-    const data = JSON.parse(result.data);
-    c.set('user', data.user);
-    return await next();
+  if (!result.success) {
+    return c.json({ error: t('invalid-token-or-expired') }, 401);
   }
 
-  return c.json({ error: t('invalid-token-or-expired') }, 401);
+  const data = JSON.parse(result.data);
+  const tokenUser = data.user;
+
+  if (!tokenUser || !tokenUser.id) {
+    return c.json({ error: t('invalid-token-or-expired') }, 401);
+  }
+
+  // Validar se o usuário foi suspenso ou se token_version foi incrementado
+  if (c.env.DB) {
+    const dbUser = await c.env.DB
+      .prepare('SELECT status, token_version, role FROM users WHERE id = ?')
+      .bind(tokenUser.id)
+      .first<{ status: string; token_version: number; role: string }>();
+
+    if (!dbUser || dbUser.status === 'suspended') {
+      return c.json({ error: t('user-suspended-or-inactive') }, 401);
+    }
+
+    if (
+      tokenUser.tokenVersion !== undefined &&
+      dbUser.token_version > tokenUser.tokenVersion
+    ) {
+      return c.json({ error: t('invalid-token-or-expired') }, 401);
+    }
+
+    c.set('user', {
+      ...tokenUser,
+      role: dbUser.role as any,
+      status: dbUser.status as any,
+      tokenVersion: dbUser.token_version,
+    });
+  } else {
+    c.set('user', tokenUser);
+  }
+
+  return await next();
 };

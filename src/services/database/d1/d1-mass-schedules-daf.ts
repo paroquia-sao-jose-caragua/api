@@ -42,14 +42,14 @@ export class D1MassSchedulesDAF implements MassSchedulesDAF {
         id: string;
         schedule_id: string;
         start_time: string;
-        end_time: string;
+        end_time: string | null;
       }>();
 
     const times = timesRows.results.map((row) => ({
       id: row.id,
       scheduleId: row.schedule_id,
       startTime: row.start_time,
-      endTime: row.end_time,
+      endTime: row.end_time ?? undefined,
     }));
 
     return {
@@ -58,13 +58,13 @@ export class D1MassSchedulesDAF implements MassSchedulesDAF {
       title: massScheduleRow.title,
       type: massScheduleRow.type,
       orientations: massScheduleRow.orientations,
-      isPrecept: massScheduleRow.is_precept,
+      isPrecept: Boolean(massScheduleRow.is_precept),
       recurrenceType: massScheduleRow.recurrence_type,
       dayOfWeek: massScheduleRow.day_of_week ?? undefined,
       dayOfMonth: massScheduleRow.day_of_month ?? undefined,
       weekOfMonth: massScheduleRow.week_of_month ?? undefined,
       monthOfYear: massScheduleRow.month_of_year ?? undefined,
-      active: massScheduleRow.active,
+      active: Boolean(massScheduleRow.active),
       startDate: massScheduleRow.start_date ?? undefined,
       endDate: massScheduleRow.end_date ?? undefined,
       createdAt: massScheduleRow.created_at,
@@ -107,46 +107,62 @@ export class D1MassSchedulesDAF implements MassSchedulesDAF {
         updated_at: string;
       }>();
 
-    return Promise.all(
-      massSchedulesRows.results.map(async (row) => {
-        const timesRows = await this.d1
-          .prepare('SELECT * FROM mass_schedule_times WHERE schedule_id = ?')
-          .bind(row.id)
-          .all<{
-            id: string;
-            schedule_id: string;
-            start_time: string;
-            end_time: string;
-          }>();
+    if (!massSchedulesRows.results || massSchedulesRows.results.length === 0) {
+      return [];
+    }
 
-        const times = timesRows.results.map((timeRow) => ({
-          id: timeRow.id,
-          scheduleId: timeRow.schedule_id,
-          startTime: timeRow.start_time,
-          endTime: timeRow.end_time,
-        }));
+    const scheduleIds = massSchedulesRows.results.map((r) => r.id);
+    const placeholders = scheduleIds.map(() => '?').join(',');
 
-        return {
-          id: row.id,
-          communityId: row.community_id,
-          title: row.title ?? undefined,
-          type: row.type,
-          orientations: row.orientations ?? undefined,
-          isPrecept: row.is_precept,
-          recurrenceType: row.recurrence_type,
-          dayOfWeek: row.day_of_week ?? undefined,
-          dayOfMonth: row.day_of_month ?? undefined,
-          weekOfMonth: row.week_of_month ?? undefined,
-          monthOfYear: row.month_of_year ?? undefined,
-          active: row.active,
-          startDate: row.start_date ?? undefined,
-          endDate: row.end_date ?? undefined,
-          createdAt: row.created_at,
-          updatedAt: row.updated_at,
-          times,
-        };
-      }),
-    );
+    const timesRows = await this.d1
+      .prepare(
+        `SELECT id, schedule_id, start_time, end_time 
+         FROM mass_schedule_times 
+         WHERE schedule_id IN (${placeholders})`,
+      )
+      .bind(...scheduleIds)
+      .all<{
+        id: string;
+        schedule_id: string;
+        start_time: string;
+        end_time: string | null;
+      }>();
+
+    const timesByScheduleId = new Map<
+      string,
+      { id: string; scheduleId: string; startTime: string; endTime?: string }[]
+    >();
+
+    for (const timeRow of timesRows.results) {
+      const scheduleTimes = timesByScheduleId.get(timeRow.schedule_id) || [];
+      scheduleTimes.push({
+        id: timeRow.id,
+        scheduleId: timeRow.schedule_id,
+        startTime: timeRow.start_time,
+        endTime: timeRow.end_time ?? undefined,
+      });
+      timesByScheduleId.set(timeRow.schedule_id, scheduleTimes);
+    }
+
+    return massSchedulesRows.results.map((row) => ({
+      id: row.id,
+      communityId: row.community_id,
+      title: row.title ?? undefined,
+      type: row.type,
+      orientations: row.orientations ?? undefined,
+      isPrecept: Boolean(row.is_precept),
+      recurrenceType: row.recurrence_type,
+      dayOfWeek: row.day_of_week ?? undefined,
+      dayOfMonth: row.day_of_month ?? undefined,
+      weekOfMonth: row.week_of_month ?? undefined,
+      monthOfYear: row.month_of_year ?? undefined,
+      active: Boolean(row.active),
+      startDate: row.start_date ?? undefined,
+      endDate: row.end_date ?? undefined,
+      createdAt: row.created_at,
+      updatedAt: row.updated_at,
+      times: timesByScheduleId.get(row.id) || [],
+    }));
   }
 
   async findAll(): Promise<MassSchedule[]> {
@@ -177,46 +193,54 @@ export class D1MassSchedulesDAF implements MassSchedulesDAF {
         updated_at: string;
       }>();
 
-    return Promise.all(
-      massSchedulesRows.results.map(async (row) => {
-        const timesRows = await this.d1
-          .prepare('SELECT * FROM mass_schedule_times WHERE schedule_id = ?')
-          .bind(row.id)
-          .all<{
-            id: string;
-            schedule_id: string;
-            start_time: string;
-            end_time: string;
-          }>();
+    if (!massSchedulesRows.results || massSchedulesRows.results.length === 0) {
+      return [];
+    }
 
-        const times = timesRows.results.map((timeRow) => ({
-          id: timeRow.id,
-          scheduleId: timeRow.schedule_id,
-          startTime: timeRow.start_time,
-          endTime: timeRow.end_time,
-        }));
+    const timesRows = await this.d1
+      .prepare('SELECT id, schedule_id, start_time, end_time FROM mass_schedule_times')
+      .all<{
+        id: string;
+        schedule_id: string;
+        start_time: string;
+        end_time: string | null;
+      }>();
 
-        return {
-          id: row.id,
-          communityId: row.community_id,
-          title: row.title,
-          type: row.type,
-          orientations: row.orientations,
-          isPrecept: row.is_precept,
-          recurrenceType: row.recurrence_type,
-          dayOfWeek: row.day_of_week ?? undefined,
-          dayOfMonth: row.day_of_month ?? undefined,
-          weekOfMonth: row.week_of_month ?? undefined,
-          monthOfYear: row.month_of_year ?? undefined,
-          active: row.active,
-          startDate: row.start_date ?? undefined,
-          endDate: row.end_date ?? undefined,
-          createdAt: row.created_at,
-          updatedAt: row.updated_at,
-          times,
-        };
-      }),
-    );
+    const timesByScheduleId = new Map<
+      string,
+      { id: string; scheduleId: string; startTime: string; endTime?: string }[]
+    >();
+
+    for (const timeRow of timesRows.results) {
+      const scheduleTimes = timesByScheduleId.get(timeRow.schedule_id) || [];
+      scheduleTimes.push({
+        id: timeRow.id,
+        scheduleId: timeRow.schedule_id,
+        startTime: timeRow.start_time,
+        endTime: timeRow.end_time ?? undefined,
+      });
+      timesByScheduleId.set(timeRow.schedule_id, scheduleTimes);
+    }
+
+    return massSchedulesRows.results.map((row) => ({
+      id: row.id,
+      communityId: row.community_id,
+      title: row.title,
+      type: row.type,
+      orientations: row.orientations,
+      isPrecept: Boolean(row.is_precept),
+      recurrenceType: row.recurrence_type,
+      dayOfWeek: row.day_of_week ?? undefined,
+      dayOfMonth: row.day_of_month ?? undefined,
+      weekOfMonth: row.week_of_month ?? undefined,
+      monthOfYear: row.month_of_year ?? undefined,
+      active: Boolean(row.active),
+      startDate: row.start_date ?? undefined,
+      endDate: row.end_date ?? undefined,
+      createdAt: row.created_at,
+      updatedAt: row.updated_at,
+      times: timesByScheduleId.get(row.id) || [],
+    }));
   }
 
   async create({
@@ -288,7 +312,7 @@ export class D1MassSchedulesDAF implements MassSchedulesDAF {
           .prepare(
             'INSERT INTO mass_schedule_times (id, schedule_id, start_time, end_time) VALUES (?, ?, ?, ?)',
           )
-          .bind(time.id, time.scheduleId, time.startTime, time.endTime),
+          .bind(time.id, time.scheduleId, time.startTime, time.endTime ?? null),
       );
     }
 
@@ -351,7 +375,7 @@ export class D1MassSchedulesDAF implements MassSchedulesDAF {
           .prepare(
             'INSERT INTO mass_schedule_times (id, schedule_id, start_time, end_time) VALUES (?, ?, ?, ?)',
           )
-          .bind(time.id, time.scheduleId, time.startTime, time.endTime),
+          .bind(time.id, time.scheduleId, time.startTime, time.endTime ?? null),
       );
     }
 

@@ -5,5 +5,16 @@ export const listClergy: ControllerFn = async (c) => {
 
   const { clergy } = await listClergyUseCase.execute();
 
-  return c.json({ clergy });
+  const formattedClergy = clergy.map((item) => ({
+    ...item,
+    photoUrl: item.photoId
+      ? item.photoId.startsWith('http://') ||
+        item.photoId.startsWith('https://') ||
+        item.photoId.startsWith('/')
+        ? item.photoId
+        : `${c.env.S3_API_URL}/${item.photoId}`
+      : item.photoUrl || null,
+  }));
+
+  return c.json({ clergy: formattedClergy });
 };

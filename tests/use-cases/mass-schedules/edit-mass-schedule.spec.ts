@@ -61,6 +61,26 @@ describe('Edit Mass Schedule Use Case', () => {
     );
   });
 
+  it('should be able to edit a mass schedule removing endTime', async () => {
+    const { massSchedule: newMassSchedule } = await sut.execute({
+      massScheduleId: massSchedule.id,
+      type: 'ordinary',
+      recurrenceType: 'weekly',
+      dayOfWeek: 3,
+      times: [
+        {
+          startTime: '19:30',
+        },
+      ],
+      isPrecept: false,
+      active: true,
+    });
+
+    expect(newMassSchedule.times).toHaveLength(1);
+    expect(newMassSchedule.times[0].startTime).toBe('19:30');
+    expect(newMassSchedule.times[0].endTime).toBeUndefined();
+  });
+
   it('should not be able to edit a mass schedule with a non-existing id', async () => {
     await expect(() =>
       sut.execute({

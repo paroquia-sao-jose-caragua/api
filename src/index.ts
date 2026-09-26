@@ -14,6 +14,12 @@ import { blogRoutes } from './http/controllers/blog/routes';
 import { massSchedulesRoutes } from './http/controllers/mass-schedules/routes';
 import { eventSchedulesRoutes } from './http/controllers/event-schedules/routes';
 import { calendarRoutes } from './http/controllers/calendar/routes';
+import { announcementsRoutes } from './http/controllers/announcements/routes';
+import { liturgyRoutes } from './http/controllers/liturgy/routes';
+import { parishContactRoutes } from './http/controllers/parish-contact/routes';
+import { donationsInfoRoutes } from './http/controllers/donations-info/routes';
+import { urgentAlertRoutes } from './http/controllers/urgent-alert/routes';
+import { appointmentsRoutes } from './http/controllers/appointments/routes';
 import { notFound } from './http/controllers/notFound';
 
 const app = new Hono<{ Bindings: Bindings; Variables: Variables }>({
@@ -34,6 +40,12 @@ app.route('/', blogRoutes);
 app.route('/', massSchedulesRoutes);
 app.route('/', eventSchedulesRoutes);
 app.route('/', calendarRoutes);
+app.route('/', announcementsRoutes);
+app.route('/', liturgyRoutes);
+app.route('/', parishContactRoutes);
+app.route('/', donationsInfoRoutes);
+app.route('/', urgentAlertRoutes);
+app.route('/', appointmentsRoutes);
 
 app.notFound(notFound);
 app.onError(onAppError);

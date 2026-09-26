@@ -18,7 +18,9 @@ declare global {
     user: {
       id: string;
       email: string;
-      role: 'admin' | 'user' | 'viewer';
+      role: 'admin' | 'secretary' | 'user' | 'pastoral_agent' | 'viewer';
+      status?: 'active' | 'suspended' | 'pending';
+      tokenVersion?: number;
     };
     timezone: string;
     timezoneOffset: string;
@@ -45,6 +47,10 @@ declare global {
     DOMAIN: string;
     PANEL_BASE_URL: string;
     SITE_BASE_URL: string;
+
+    // E-mail (Resend)
+    RESEND_API_KEY?: string;
+    RESEND_FROM_EMAIL?: string;
 
     // Databases and Storages
     DB: D1Database;
