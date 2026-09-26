@@ -21,4 +21,9 @@ export class InMemoryAppointmentServicesDAF implements AppointmentServicesDAF {
       this.items.push(service);
     }
   }
+
+  async delete(id: string): Promise<void> {
+    this.items = this.items.filter((item) => item.id !== id);
+  }
 }
+

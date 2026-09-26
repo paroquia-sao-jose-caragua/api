@@ -84,4 +84,9 @@ export class D1AppointmentServicesDAF implements AppointmentServicesDAF {
       )
       .run();
   }
+
+  async delete(id: string): Promise<void> {
+    await this.d1.prepare('DELETE FROM appointment_services WHERE id = ?').bind(id).run();
+  }
 }
+

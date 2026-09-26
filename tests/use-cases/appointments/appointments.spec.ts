@@ -14,10 +14,14 @@ import { ListAppointmentsUseCase } from '@/use-cases/appointments/list-appointme
 import { UpdateAppointmentStatusUseCase } from '@/use-cases/appointments/update-appointment-status';
 import { GetAppointmentSettingsUseCase } from '@/use-cases/appointments/get-appointment-settings';
 import { UpdateAppointmentSettingsUseCase } from '@/use-cases/appointments/update-appointment-settings';
+import { SaveAppointmentServiceUseCase } from '@/use-cases/appointments/save-appointment-service';
+import { GetAppointmentServiceUseCase } from '@/use-cases/appointments/get-appointment-service';
+import { DeleteAppointmentServiceUseCase } from '@/use-cases/appointments/delete-appointment-service';
 import { AppointmentSlotUnavailableError } from '@/use-cases/errors/appointment-slot-unavailable-error';
 import { AddressRequiredForServiceError } from '@/use-cases/errors/address-required-for-service-error';
 import { AppointmentsDisabledError } from '@/use-cases/errors/appointments-disabled-error';
 import { NotAllowedError } from '@/use-cases/errors/not-allowed-error';
+
 
 describe('Appointments Use Cases', () => {
   let servicesDaf: InMemoryAppointmentServicesDAF;
@@ -357,4 +361,48 @@ describe('Appointments Use Cases', () => {
       })
     ).rejects.toBeInstanceOf(AppointmentsDisabledError);
   });
+
+  it('should be able to create, update, get and delete an appointment service', async () => {
+    const saveSut = new SaveAppointmentServiceUseCase(servicesDaf);
+    const getSut = new GetAppointmentServiceUseCase(servicesDaf);
+    const deleteSut = new DeleteAppointmentServiceUseCase(servicesDaf);
+
+    // Create
+    const { service: created } = await saveSut.execute({
+      title: 'Aconselhamento Matrimonial',
+      category: 'pastoral',
+      description: 'Atendimento para casais e noivos',
+      defaultDurationMinutes: 45,
+      requiresAddress: false,
+      active: true,
+    });
+
+    expect(created.id).toBeDefined();
+    expect(created.title).toBe('Aconselhamento Matrimonial');
+    expect(created.category).toBe('pastoral');
+    expect(created.defaultDurationMinutes).toBe(45);
+
+    // Get
+    const { service: retrieved } = await getSut.execute({ id: created.id });
+    expect(retrieved.title).toBe('Aconselhamento Matrimonial');
+
+    // Update
+    const { service: updated } = await saveSut.execute({
+      id: created.id,
+      title: 'Aconselhamento Familiar e de Noivos',
+      category: 'pastoral',
+      defaultDurationMinutes: 50,
+      requiresAddress: false,
+      active: true,
+    });
+
+    expect(updated.title).toBe('Aconselhamento Familiar e de Noivos');
+    expect(updated.defaultDurationMinutes).toBe(50);
+
+    // Delete
+    await deleteSut.execute({ id: created.id });
+    const afterDelete = await servicesDaf.findById(created.id);
+    expect(afterDelete).toBeNull();
+  });
 });
+

@@ -24,6 +24,11 @@ import {
   getAppointmentSettings,
   updateAppointmentSettings,
 } from './appointment-settings';
+import {
+  getAppointmentService,
+  saveAppointmentService,
+  deleteAppointmentService,
+} from './manage-services';
 
 export const appointmentsRoutes = new Hono<{
   Bindings: Bindings;
@@ -33,6 +38,8 @@ export const appointmentsRoutes = new Hono<{
 // Public routes for the website and faithful
 appointmentsRoutes.get('/appointment-settings', getAppointmentSettings);
 appointmentsRoutes.get('/appointment-services', listAppointmentServices);
+appointmentsRoutes.get('/appointment-services/:id', getAppointmentService);
+
 appointmentsRoutes.get('/pastoral-agents', listPastoralAgents);
 appointmentsRoutes.get('/pastoral-agents/:id', getPastoralAgent);
 appointmentsRoutes.get('/appointments/available-slots', getAvailableSlots);
@@ -56,6 +63,26 @@ appointmentsRoutes.put(
   verifyUserRole(['admin', 'secretary']),
   updateAppointmentSettings
 );
+
+appointmentsRoutes.post(
+  '/appointment-services',
+  verifyToken,
+  verifyUserRole(['admin', 'secretary']),
+  saveAppointmentService
+);
+appointmentsRoutes.put(
+  '/appointment-services/:id',
+  verifyToken,
+  verifyUserRole(['admin', 'secretary']),
+  saveAppointmentService
+);
+appointmentsRoutes.delete(
+  '/appointment-services/:id',
+  verifyToken,
+  verifyUserRole(['admin', 'secretary']),
+  deleteAppointmentService
+);
+
 
 appointmentsRoutes.post(
   '/pastoral-agents',
