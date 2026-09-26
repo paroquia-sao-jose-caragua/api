@@ -92,3 +92,8 @@ SET
   email = 'contato@paroquiasaojosecaragua.org.br',
   office_hours = 'Atendimento via Secretaria Paroquial (Matriz)'
 WHERE slug IN ('sagrado-coracao-de-jesus', 'capela-sagrado-coracao-de-jesus');
+
+
+INSERT INTO migrations (id, name, description, author) 
+VALUES (3, '0003-expand-communities-and-add-gallery', 'Adiciona novos campos à tabela Communities e cria a tabela community_photos', 'Giselle Hoekveld Silva')
+ON CONFLICT(id) DO NOTHING;
