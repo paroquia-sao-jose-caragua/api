@@ -5,6 +5,8 @@ type PushSubscriptionRow = {
   id: string;
   user_name: string | null;
   user_id: string | null;
+  user_email?: string | null;
+  user_role?: string | null;
   origin: "site" | "panel";
   device_info: string | null;
   endpoint: string;
@@ -26,6 +28,8 @@ export class D1PushSubscriptionsDAF implements PushSubscriptionsDAF {
       id: row.id,
       userName: row.user_name,
       userId: row.user_id,
+      userEmail: row.user_email ?? null,
+      userRole: row.user_role ?? null,
       origin: row.origin,
       deviceInfo: row.device_info,
       endpoint: row.endpoint,
@@ -39,9 +43,13 @@ export class D1PushSubscriptionsDAF implements PushSubscriptionsDAF {
   async findById(id: string): Promise<PushSubscriptionEntity | null> {
     const row = await this.d1
       .prepare(
-        `SELECT id, user_name, user_id, origin, device_info, endpoint, p256dh, auth, created_at, updated_at
-         FROM push_subscriptions
-         WHERE id = ?`
+        `SELECT 
+           ps.id, COALESCE(u.name, ps.user_name) as user_name, ps.user_id, 
+           u.email as user_email, u.role as user_role, ps.origin, ps.device_info, 
+           ps.endpoint, ps.p256dh, ps.auth, ps.created_at, ps.updated_at
+         FROM push_subscriptions ps
+         LEFT JOIN users u ON ps.user_id = u.id
+         WHERE ps.id = ?`
       )
       .bind(id)
       .first<PushSubscriptionRow>();
@@ -53,9 +61,13 @@ export class D1PushSubscriptionsDAF implements PushSubscriptionsDAF {
   async findByEndpoint(endpoint: string): Promise<PushSubscriptionEntity | null> {
     const row = await this.d1
       .prepare(
-        `SELECT id, user_name, user_id, origin, device_info, endpoint, p256dh, auth, created_at, updated_at
-         FROM push_subscriptions
-         WHERE endpoint = ?`
+        `SELECT 
+           ps.id, COALESCE(u.name, ps.user_name) as user_name, ps.user_id, 
+           u.email as user_email, u.role as user_role, ps.origin, ps.device_info, 
+           ps.endpoint, ps.p256dh, ps.auth, ps.created_at, ps.updated_at
+         FROM push_subscriptions ps
+         LEFT JOIN users u ON ps.user_id = u.id
+         WHERE ps.endpoint = ?`
       )
       .bind(endpoint)
       .first<PushSubscriptionRow>();
@@ -67,9 +79,13 @@ export class D1PushSubscriptionsDAF implements PushSubscriptionsDAF {
   async findAll(): Promise<PushSubscriptionEntity[]> {
     const { results } = await this.d1
       .prepare(
-        `SELECT id, user_name, user_id, origin, device_info, endpoint, p256dh, auth, created_at, updated_at
-         FROM push_subscriptions
-         ORDER BY created_at DESC`
+        `SELECT 
+           ps.id, COALESCE(u.name, ps.user_name) as user_name, ps.user_id, 
+           u.email as user_email, u.role as user_role, ps.origin, ps.device_info, 
+           ps.endpoint, ps.p256dh, ps.auth, ps.created_at, ps.updated_at
+         FROM push_subscriptions ps
+         LEFT JOIN users u ON ps.user_id = u.id
+         ORDER BY ps.created_at DESC`
       )
       .all<PushSubscriptionRow>();
 
@@ -79,10 +95,14 @@ export class D1PushSubscriptionsDAF implements PushSubscriptionsDAF {
   async findByOrigin(origin: "site" | "panel"): Promise<PushSubscriptionEntity[]> {
     const { results } = await this.d1
       .prepare(
-        `SELECT id, user_name, user_id, origin, device_info, endpoint, p256dh, auth, created_at, updated_at
-         FROM push_subscriptions
-         WHERE origin = ?
-         ORDER BY created_at DESC`
+        `SELECT 
+           ps.id, COALESCE(u.name, ps.user_name) as user_name, ps.user_id, 
+           u.email as user_email, u.role as user_role, ps.origin, ps.device_info, 
+           ps.endpoint, ps.p256dh, ps.auth, ps.created_at, ps.updated_at
+         FROM push_subscriptions ps
+         LEFT JOIN users u ON ps.user_id = u.id
+         WHERE ps.origin = ?
+         ORDER BY ps.created_at DESC`
       )
       .bind(origin)
       .all<PushSubscriptionRow>();
