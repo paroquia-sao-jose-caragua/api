@@ -20,7 +20,11 @@ interface SendPushNotificationResponse {
 }
 
 export class SendPushNotificationUseCase {
-  constructor(private pushSubscriptionsDaf: PushSubscriptionsDAF) {}
+  constructor(
+    private pushSubscriptionsDaf: PushSubscriptionsDAF,
+    private siteBaseUrl = "http://localhost:3000",
+    private panelBaseUrl = "http://localhost:3001"
+  ) {}
 
   async execute(
     request: SendPushNotificationRequest
@@ -41,19 +45,35 @@ export class SendPushNotificationUseCase {
     let sentCount = 0;
     let failedCount = 0;
 
-    const payloadString = JSON.stringify(request.payload);
-
     await Promise.all(
       targets.map(async (sub) => {
         try {
-          // Standard WebPush payload dispatch or FCM/Browser push dispatch
+          const targetBaseUrl =
+            sub.origin === "panel" ? this.panelBaseUrl : this.siteBaseUrl;
+
+          let targetUrl = request.payload.url || "/";
+
+          // If URL is relative, prepend origin domain (site or panel)
+          if (targetUrl.startsWith("/")) {
+            targetUrl = `${targetBaseUrl}${targetUrl}`;
+          }
+
+          const devicePayload = {
+            title: request.payload.title,
+            body: request.payload.body,
+            url: targetUrl,
+            icon: request.payload.icon || `${targetBaseUrl}/icons/icon-192x192.png`,
+            badge: `${targetBaseUrl}/icons/icon-192x192.png`,
+            origin: sub.origin,
+          };
+
           const res = await fetch(sub.endpoint, {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
               TTL: "86400",
             },
-            body: payloadString,
+            body: JSON.stringify(devicePayload),
           });
 
           if (res.status === 404 || res.status === 410) {

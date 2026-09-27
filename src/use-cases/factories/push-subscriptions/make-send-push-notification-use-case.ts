@@ -3,5 +3,13 @@ import { SendPushNotificationUseCase } from "@/use-cases/push-subscriptions/send
 
 export function makeSendPushNotificationUseCase(c: DomainContext) {
   const pushSubscriptionsDaf = new D1PushSubscriptionsDAF(c.env.DB);
-  return new SendPushNotificationUseCase(pushSubscriptionsDaf);
+  const siteBaseUrl = c.env.SITE_BASE_URL || "http://localhost:3000";
+  const panelBaseUrl = c.env.PANEL_BASE_URL || "http://localhost:3001";
+
+  return new SendPushNotificationUseCase(
+    pushSubscriptionsDaf,
+    siteBaseUrl,
+    panelBaseUrl
+  );
 }
+
