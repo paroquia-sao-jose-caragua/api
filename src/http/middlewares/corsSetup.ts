@@ -17,7 +17,12 @@ export const corsSetup: MiddlewareHandler = cors({
       }
     })();
 
-    const isAllowed = !!effectiveOrigin && allowedOrigins.includes(effectiveOrigin);
+    const isDev = c.env.ENVIRONMENT === 'development' || !c.env.ENVIRONMENT;
+    const isLocalhost = effectiveOrigin.includes('localhost') || effectiveOrigin.includes('127.0.0.1');
+
+    const isAllowed =
+      (isDev && isLocalhost) ||
+      (!!effectiveOrigin && allowedOrigins.includes(effectiveOrigin));
 
     console.log({ isAllowed, allowedOrigins, origin, effectiveOrigin });
 
