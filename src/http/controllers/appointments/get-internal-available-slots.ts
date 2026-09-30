@@ -4,7 +4,7 @@ import { PastoralAgentNotFoundError } from '@/use-cases/errors/pastoral-agent-no
 import { ServiceNotFoundError } from '@/use-cases/errors/service-not-found-error';
 import { AppointmentsDisabledError } from '@/use-cases/errors/appointments-disabled-error';
 
-export const getAvailableSlots: ControllerFn = async (c) => {
+export const getInternalAvailableSlots: ControllerFn = async (c) => {
   const { t } = getAppContext(c);
   const agentId = c.req.query('agentId');
   const date = c.req.query('date');
@@ -20,7 +20,7 @@ export const getAvailableSlots: ControllerFn = async (c) => {
       agentId,
       date,
       serviceId,
-      bypassSettingsCheck: false,
+      bypassSettingsCheck: true,
     });
 
     return c.json(result);

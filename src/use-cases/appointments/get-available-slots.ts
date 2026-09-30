@@ -18,6 +18,7 @@ interface GetAvailableSlotsUseCaseRequest {
   agentId: string;
   date: string; // "YYYY-MM-DD"
   serviceId?: string;
+  bypassSettingsCheck?: boolean;
 }
 
 interface GetAvailableSlotsUseCaseResponse {
@@ -50,8 +51,9 @@ export class GetAvailableSlotsUseCase {
     agentId,
     date,
     serviceId,
+    bypassSettingsCheck,
   }: GetAvailableSlotsUseCaseRequest): Promise<GetAvailableSlotsUseCaseResponse> {
-    if (this.appointmentSettingsDAF) {
+    if (this.appointmentSettingsDAF && !bypassSettingsCheck) {
       const settings = await this.appointmentSettingsDAF.get();
       if (!settings.enabled) {
         throw new AppointmentsDisabledError();

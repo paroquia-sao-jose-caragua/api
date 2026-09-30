@@ -28,6 +28,8 @@ export function useCreateAppointmentSchema(t: TranslatorFn) {
       .string()
       .regex(/^\d{2}:\d{2}$/, t('error-start-time-required')),
     requesterNotes: z.string().nullable().optional(),
+    status: z.enum(['pending', 'confirmed', 'completed', 'cancelled']).optional(),
+    privatePastoralNotes: z.string().nullable().optional(),
   });
 }
 

@@ -342,6 +342,54 @@ describe('Appointments Use Cases', () => {
     ).rejects.toBeInstanceOf(AppointmentsDisabledError);
   });
 
+  it('should allow secretary or pastoral agent to create appointment even when globally disabled', async () => {
+    await settingsDaf.save({ enabled: false });
+
+    const createSut = new CreateAppointmentUseCase(
+      appointmentsDaf,
+      agentsDaf,
+      servicesDaf,
+      settingsDaf
+    );
+
+    const { appointment } = await createSut.execute({
+      agentId: 'agent-1',
+      serviceId: 'srv-confession',
+      requesterName: 'Agendado na Secretaria',
+      requesterPhone: '12991112233',
+      appointmentDate: '2026-10-07',
+      startTime: '15:30',
+      status: 'confirmed',
+      privatePastoralNotes: 'Agendado presencialmente pela secretária Maria',
+      userRole: 'secretary',
+    });
+
+    expect(appointment.id).toBeDefined();
+    expect(appointment.status).toBe('confirmed');
+    expect(appointment.privatePastoralNotes).toBe('Agendado presencialmente pela secretária Maria');
+  });
+
+  it('should allow pastoral agent to query slots when bypassSettingsCheck is true', async () => {
+    await settingsDaf.save({ enabled: false });
+
+    const slotsSut = new GetAvailableSlotsUseCase(
+      agentsDaf,
+      availabilitiesDaf,
+      appointmentsDaf,
+      servicesDaf,
+      settingsDaf
+    );
+
+    const { slots } = await slotsSut.execute({
+      agentId: 'agent-1',
+      date: '2026-10-07',
+      serviceId: 'srv-confession',
+      bypassSettingsCheck: true,
+    });
+
+    expect(slots.length).toBeGreaterThan(0);
+  });
+
   it('should block getting available slots when appointments are globally disabled', async () => {
     await settingsDaf.save({ enabled: false });
 

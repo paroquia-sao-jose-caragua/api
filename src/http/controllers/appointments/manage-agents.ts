@@ -12,6 +12,23 @@ import {
 import { makeManageAgentAvailabilitiesUseCase } from '@/use-cases/factories/appointments/make-manage-agent-availabilities-use-case';
 import { PastoralAgentNotFoundError } from '@/use-cases/errors/pastoral-agent-not-found-error';
 
+export const getMyPastoralAgent: ControllerFn = async (c) => {
+  const { user, t } = getAppContext(c);
+  const daf = new D1PastoralAgentsDAF(c.env.DB);
+  const agent = await daf.findByUserId(user.id);
+
+  if (!agent) {
+    return c.json({ error: t('error-pastoral-agent-not-found') }, 404);
+  }
+
+  return c.json({
+    agent: {
+      ...agent,
+      photoUrl: agent.photoId ? `${c.env.S3_API_URL}/${agent.photoId}` : null,
+    },
+  });
+};
+
 export const getPastoralAgent: ControllerFn = async (c) => {
   const { t } = getAppContext(c);
   const id = c.req.param('id');
