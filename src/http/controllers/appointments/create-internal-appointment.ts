@@ -6,19 +6,31 @@ import { AddressRequiredForServiceError } from '@/use-cases/errors/address-requi
 import { PastoralAgentNotFoundError } from '@/use-cases/errors/pastoral-agent-not-found-error';
 import { ServiceNotFoundError } from '@/use-cases/errors/service-not-found-error';
 import { AppointmentsDisabledError } from '@/use-cases/errors/appointments-disabled-error';
+import { D1PastoralAgentsDAF } from '@/services/database/d1/d1-pastoral-agents-daf';
 
-export const createAppointment: ControllerFn = async (c) => {
+export const createInternalAppointment: ControllerFn = async (c) => {
   const { t, inputs } = getAppContext(c);
+  const user = c.get('user');
   const schema = useCreateAppointmentSchema(t);
   const data = schema.parse(inputs);
+
+  if (user && user.role === 'pastoral_agent') {
+    const daf = new D1PastoralAgentsDAF(c.env.DB);
+    const agent = await daf.findByUserId(user.id);
+    if (!agent) {
+      return c.json({ error: t('error-pastoral-agent-not-found') }, 403);
+    }
+    if (data.agentId && data.agentId !== agent.id) {
+      return c.json({ error: t('unauthorized') }, 403);
+    }
+    data.agentId = agent.id;
+  }
 
   try {
     const useCase = makeCreateAppointmentUseCase(c);
     const { appointment } = await useCase.execute({
       ...data,
-      status: 'pending',
-      privatePastoralNotes: undefined,
-      userRole: undefined,
+      userRole: user?.role,
     });
 
     return c.json(

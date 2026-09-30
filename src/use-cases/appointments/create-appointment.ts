@@ -1,5 +1,6 @@
 import { ulid } from 'serverless-crypto-utils/id-generation';
-import type { Appointment, PatientConditions } from '@/entities/appointment';
+import type { Appointment, PatientConditions, AppointmentStatus } from '@/entities/appointment';
+import type { UserRole } from '@/entities/user';
 import type { AppointmentsDAF } from '@/services/database/appointments-daf';
 import type { PastoralAgentsDAF } from '@/services/database/pastoral-agents-daf';
 import type { AppointmentServicesDAF } from '@/services/database/appointment-services-daf';
@@ -24,6 +25,9 @@ interface CreateAppointmentUseCaseRequest {
   appointmentDate: string; // "YYYY-MM-DD"
   startTime: string; // "14:00"
   requesterNotes?: string | null;
+  status?: AppointmentStatus;
+  privatePastoralNotes?: string | null;
+  userRole?: UserRole;
 }
 
 interface CreateAppointmentUseCaseResponse {
@@ -70,8 +74,16 @@ export class CreateAppointmentUseCase {
     appointmentDate,
     startTime,
     requesterNotes,
+    status,
+    privatePastoralNotes,
+    userRole,
   }: CreateAppointmentUseCaseRequest): Promise<CreateAppointmentUseCaseResponse> {
-    if (this.appointmentSettingsDAF) {
+    const isStaff =
+      userRole === 'admin' ||
+      userRole === 'secretary' ||
+      userRole === 'pastoral_agent';
+
+    if (this.appointmentSettingsDAF && !isStaff) {
       const settings = await this.appointmentSettingsDAF.get();
       if (!settings.enabled) {
         throw new AppointmentsDisabledError(settings.suspendedMessage);
@@ -106,6 +118,9 @@ export class CreateAppointmentUseCase {
     const endMinutes = startMinutes + service.defaultDurationMinutes;
     const endTime = minutesToTime(endMinutes);
 
+    const initialStatus: AppointmentStatus =
+      status || (isStaff ? 'confirmed' : 'pending');
+
     const appointment: Appointment = {
       id: ulid(),
       agentId,
@@ -121,10 +136,11 @@ export class CreateAppointmentUseCase {
       appointmentDate,
       startTime,
       endTime,
-      status: 'pending',
+      status: initialStatus,
       accessToken: generateSecureToken(),
       requesterNotes: requesterNotes?.trim() || null,
-      privatePastoralNotes: null,
+      privatePastoralNotes:
+        isStaff && privatePastoralNotes ? privatePastoralNotes.trim() : null,
       cancellationReason: null,
       createdAt: new Date().toISOString(),
     };
@@ -134,3 +150,4 @@ export class CreateAppointmentUseCase {
     return { appointment };
   }
 }
+
