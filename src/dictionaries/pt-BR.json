@@ -109,5 +109,7 @@
   "appointment-cancelled-successfully": "Agendamento cancelado com sucesso.",
   "appointment-status-updated-successfully": "Status do agendamento atualizado com sucesso.",
   "error-appointments-disabled": "Os agendamentos estão temporariamente suspensos pela paróquia.",
-  "appointment-settings-updated-successfully": "Configurações de agendamento atualizadas com sucesso."
+  "appointment-settings-updated-successfully": "Configurações de agendamento atualizadas com sucesso.",
+  "appointment-updated-successfully": "Agendamento atualizado com sucesso.",
+  "appointment-deleted-successfully": "Agendamento excluído com sucesso."
 }

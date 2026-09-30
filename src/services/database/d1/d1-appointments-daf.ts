@@ -234,20 +234,89 @@ export class D1AppointmentsDAF implements AppointmentsDAF {
     return results ? results.map((r) => this.mapRowToEntity(r)) : [];
   }
 
-  async countBySlot(agentId: string, date: string, startTime: string): Promise<number> {
+  async countBySlot(
+    agentId: string,
+    date: string,
+    startTime: string,
+    excludeAppointmentId?: string
+  ): Promise<number> {
+    let sql = `
+      SELECT COUNT(*) as count 
+      FROM appointments 
+      WHERE agent_id = ? 
+        AND appointment_date = ? 
+        AND start_time = ? 
+        AND status != 'cancelled'
+    `;
+    const bindings: any[] = [agentId, date, startTime];
+
+    if (excludeAppointmentId) {
+      sql += ' AND id != ?';
+      bindings.push(excludeAppointmentId);
+    }
+
     const res = await this.d1
-      .prepare(`
-        SELECT COUNT(*) as count 
-        FROM appointments 
-        WHERE agent_id = ? 
-          AND appointment_date = ? 
-          AND start_time = ? 
-          AND status != 'cancelled'
-      `)
-      .bind(agentId, date, startTime)
+      .prepare(sql)
+      .bind(...bindings)
       .first<{ count: number }>();
 
     return res?.count || 0;
+  }
+
+  async update(appointment: Appointment): Promise<void> {
+    const now = new Date().toISOString();
+    await this.d1
+      .prepare(`
+        UPDATE appointments SET
+          agent_id = ?,
+          service_id = ?,
+          community_id = ?,
+          requester_name = ?,
+          requester_phone = ?,
+          requester_email = ?,
+          requester_relationship = ?,
+          patient_name = ?,
+          patient_address = ?,
+          patient_conditions = ?,
+          appointment_date = ?,
+          start_time = ?,
+          end_time = ?,
+          status = ?,
+          requester_notes = ?,
+          private_pastoral_notes = ?,
+          cancellation_reason = ?,
+          updated_at = ?
+        WHERE id = ?
+      `)
+      .bind(
+        appointment.agentId,
+        appointment.serviceId,
+        appointment.communityId,
+        appointment.requesterName,
+        appointment.requesterPhone,
+        appointment.requesterEmail,
+        appointment.requesterRelationship,
+        appointment.patientName,
+        appointment.patientAddress,
+        appointment.patientConditions ? JSON.stringify(appointment.patientConditions) : null,
+        appointment.appointmentDate,
+        appointment.startTime,
+        appointment.endTime,
+        appointment.status,
+        appointment.requesterNotes,
+        appointment.privatePastoralNotes,
+        appointment.cancellationReason,
+        appointment.updatedAt || now,
+        appointment.id
+      )
+      .run();
+  }
+
+  async delete(id: string): Promise<void> {
+    await this.d1
+      .prepare('DELETE FROM appointments WHERE id = ?')
+      .bind(id)
+      .run();
   }
 
   async updateStatus(

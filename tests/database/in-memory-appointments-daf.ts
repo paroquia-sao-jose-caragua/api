@@ -29,14 +29,34 @@ export class InMemoryAppointmentsDAF implements AppointmentsDAF {
     });
   }
 
-  async countBySlot(agentId: string, date: string, startTime: string): Promise<number> {
+  async countBySlot(
+    agentId: string,
+    date: string,
+    startTime: string,
+    excludeAppointmentId?: string
+  ): Promise<number> {
     return this.items.filter(
       (a) =>
         a.agentId === agentId &&
         a.appointmentDate === date &&
         a.startTime === startTime &&
-        a.status !== 'cancelled'
+        a.status !== 'cancelled' &&
+        (!excludeAppointmentId || a.id !== excludeAppointmentId)
     ).length;
+  }
+
+  async update(appointment: Appointment): Promise<void> {
+    const index = this.items.findIndex((a) => a.id === appointment.id);
+    if (index !== -1) {
+      this.items[index] = {
+        ...appointment,
+        updatedAt: new Date().toISOString(),
+      };
+    }
+  }
+
+  async delete(id: string): Promise<void> {
+    this.items = this.items.filter((a) => a.id !== id);
   }
 
   async updateStatus(

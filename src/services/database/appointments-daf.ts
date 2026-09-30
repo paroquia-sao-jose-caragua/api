@@ -13,7 +13,14 @@ export interface AppointmentsDAF {
   findById(id: string): Promise<Appointment | null>;
   findByToken(token: string): Promise<Appointment | null>;
   list(filters?: AppointmentsFilters): Promise<Appointment[]>;
-  countBySlot(agentId: string, date: string, startTime: string): Promise<number>;
+  countBySlot(
+    agentId: string,
+    date: string,
+    startTime: string,
+    excludeAppointmentId?: string
+  ): Promise<number>;
+  update(appointment: Appointment): Promise<void>;
+  delete(id: string): Promise<void>;
   updateStatus(
     id: string,
     status: AppointmentStatus,
