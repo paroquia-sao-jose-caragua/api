@@ -17,6 +17,9 @@ import { UpdateAppointmentSettingsUseCase } from '@/use-cases/appointments/updat
 import { SaveAppointmentServiceUseCase } from '@/use-cases/appointments/save-appointment-service';
 import { GetAppointmentServiceUseCase } from '@/use-cases/appointments/get-appointment-service';
 import { DeleteAppointmentServiceUseCase } from '@/use-cases/appointments/delete-appointment-service';
+import { GetAppointmentByIdUseCase } from '@/use-cases/appointments/get-appointment-by-id';
+import { UpdateAppointmentUseCase } from '@/use-cases/appointments/update-appointment';
+import { DeleteAppointmentUseCase } from '@/use-cases/appointments/delete-appointment';
 import { AppointmentSlotUnavailableError } from '@/use-cases/errors/appointment-slot-unavailable-error';
 import { AddressRequiredForServiceError } from '@/use-cases/errors/address-required-for-service-error';
 import { AppointmentsDisabledError } from '@/use-cases/errors/appointments-disabled-error';
@@ -451,6 +454,137 @@ describe('Appointments Use Cases', () => {
     await deleteSut.execute({ id: created.id });
     const afterDelete = await servicesDaf.findById(created.id);
     expect(afterDelete).toBeNull();
+  });
+
+  it('should be able to get an appointment by id with role check', async () => {
+    const createSut = new CreateAppointmentUseCase(
+      appointmentsDaf,
+      agentsDaf,
+      servicesDaf,
+      settingsDaf
+    );
+
+    const { appointment } = await createSut.execute({
+      agentId: 'agent-1',
+      serviceId: 'srv-confession',
+      requesterName: 'João da Silva',
+      requesterPhone: '12998887766',
+      appointmentDate: '2026-10-07',
+      startTime: '16:00',
+    });
+
+    const getSut = new GetAppointmentByIdUseCase(appointmentsDaf, agentsDaf);
+    const result = await getSut.execute({ id: appointment.id });
+    expect(result.appointment.id).toBe(appointment.id);
+    expect(result.appointment.requesterName).toBe('João da Silva');
+
+    // Pastoral agent belonging to another agent should be forbidden
+    await expect(() =>
+      getSut.execute({
+        id: appointment.id,
+        userRole: 'pastoral_agent',
+        userId: 'other-user',
+      })
+    ).rejects.toBeInstanceOf(NotAllowedError);
+  });
+
+  it('should be able to update an appointment and detect conflicts', async () => {
+    const createSut = new CreateAppointmentUseCase(
+      appointmentsDaf,
+      agentsDaf,
+      servicesDaf,
+      settingsDaf
+    );
+
+    const { appointment: app1 } = await createSut.execute({
+      agentId: 'agent-1',
+      serviceId: 'srv-confession',
+      requesterName: 'Maria Silva',
+      requesterPhone: '12999990001',
+      appointmentDate: '2026-10-07',
+      startTime: '14:00',
+    });
+
+    const { appointment: app2 } = await createSut.execute({
+      agentId: 'agent-1',
+      serviceId: 'srv-confession',
+      requesterName: 'José Silva',
+      requesterPhone: '12999990002',
+      appointmentDate: '2026-10-07',
+      startTime: '14:30',
+    });
+
+    const updateSut = new UpdateAppointmentUseCase(
+      appointmentsDaf,
+      agentsDaf,
+      servicesDaf
+    );
+
+    // Updating app1 keeping its own slot should succeed
+    const { appointment: updatedApp1 } = await updateSut.execute({
+      id: app1.id,
+      agentId: 'agent-1',
+      serviceId: 'srv-confession',
+      requesterName: 'Maria Silva Atualizada',
+      requesterPhone: '12999990001',
+      appointmentDate: '2026-10-07',
+      startTime: '14:00',
+      requesterNotes: 'Nota atualizada',
+    });
+
+    expect(updatedApp1.requesterName).toBe('Maria Silva Atualizada');
+    expect(updatedApp1.requesterNotes).toBe('Nota atualizada');
+
+    // Attempting to move app1 into app2's occupied slot should fail
+    await expect(() =>
+      updateSut.execute({
+        id: app1.id,
+        agentId: 'agent-1',
+        serviceId: 'srv-confession',
+        requesterName: 'Maria Silva',
+        requesterPhone: '12999990001',
+        appointmentDate: '2026-10-07',
+        startTime: '14:30',
+      })
+    ).rejects.toBeInstanceOf(AppointmentSlotUnavailableError);
+
+    // Moving app1 to a new empty slot should succeed
+    const { appointment: movedApp1 } = await updateSut.execute({
+      id: app1.id,
+      agentId: 'agent-1',
+      serviceId: 'srv-confession',
+      requesterName: 'Maria Silva',
+      requesterPhone: '12999990001',
+      appointmentDate: '2026-10-07',
+      startTime: '15:00',
+    });
+
+    expect(movedApp1.startTime).toBe('15:00');
+    expect(movedApp1.endTime).toBe('15:30');
+  });
+
+  it('should be able to delete an appointment', async () => {
+    const createSut = new CreateAppointmentUseCase(
+      appointmentsDaf,
+      agentsDaf,
+      servicesDaf,
+      settingsDaf
+    );
+
+    const { appointment } = await createSut.execute({
+      agentId: 'agent-1',
+      serviceId: 'srv-confession',
+      requesterName: 'Para Excluir',
+      requesterPhone: '12999998888',
+      appointmentDate: '2026-10-07',
+      startTime: '16:30',
+    });
+
+    const deleteSut = new DeleteAppointmentUseCase(appointmentsDaf, agentsDaf);
+    await deleteSut.execute({ id: appointment.id });
+
+    const found = await appointmentsDaf.findById(appointment.id);
+    expect(found).toBeNull();
   });
 });
 

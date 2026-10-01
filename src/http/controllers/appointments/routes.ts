@@ -10,6 +10,9 @@ import { createInternalAppointment } from './create-internal-appointment';
 import { getAppointmentByToken } from './get-appointment-by-token';
 import { cancelAppointmentByToken } from './cancel-appointment-by-token';
 import { listAppointments } from './list-appointments';
+import { getAppointmentById } from './get-appointment-by-id';
+import { updateAppointment } from './update-appointment';
+import { deleteAppointment } from './delete-appointment';
 import { updateAppointmentStatus } from './update-appointment-status';
 import {
   getMyPastoralAgent,
@@ -72,6 +75,24 @@ appointmentsRoutes.patch(
   '/appointments/:id/status',
   verifyToken,
   updateAppointmentStatus
+);
+appointmentsRoutes.get(
+  '/appointments/:id',
+  verifyToken,
+  verifyUserRole(['admin', 'secretary', 'pastoral_agent']),
+  getAppointmentById
+);
+appointmentsRoutes.put(
+  '/appointments/:id',
+  verifyToken,
+  verifyUserRole(['admin', 'secretary', 'pastoral_agent']),
+  updateAppointment
+);
+appointmentsRoutes.delete(
+  '/appointments/:id',
+  verifyToken,
+  verifyUserRole(['admin', 'secretary', 'pastoral_agent']),
+  deleteAppointment
 );
 appointmentsRoutes.put(
   '/appointment-settings',

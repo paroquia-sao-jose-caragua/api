@@ -53,6 +53,7 @@
         "PANEL_BASE_URL": "https://panel-staging.paroquiasaojosecaragua.org.br",
         "SITE_BASE_URL": "https://staging.paroquiasaojosecaragua.org.br",
         "S3_API_URL": "https://cdn-staging.paroquiasaojosecaragua.org.br",
+        "RESEND_FROM_EMAIL": "Paróquia São José <nao-responda@paroquiasaojosecaragua.org.br>"
       },
       "d1_databases": [
         {
