@@ -1,17 +1,23 @@
-import {logWithConsole} from './console'
-import {logWithDiscord} from './discord'
+import { logWithConsole } from './console';
+import { logWithDiscord } from './discord';
 
 export const log = async (params: {
-	data: object
-	env: Bindings
-	error?: unknown
+  data: object;
+  env: Bindings;
+  error?: unknown;
 }) => {
-	switch (params.env.ENVIRONMENT) {
-		case 'development': {
-			return await logWithConsole(params)
-		}
-		default: {
-			return await logWithDiscord(params)
-		}
-	}
-}
+  if (params.env.ENVIRONMENT === 'development') {
+    await logWithConsole(params);
+
+    if (params.env.ERROR_LOGGER_API_URL) {
+      try {
+        await logWithDiscord(params);
+      } catch (discordErr) {
+        console.error('Failed to send error log to Discord:', discordErr);
+      }
+    }
+    return;
+  }
+
+  return await logWithDiscord(params);
+};

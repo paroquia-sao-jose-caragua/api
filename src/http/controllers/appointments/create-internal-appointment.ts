@@ -8,6 +8,7 @@ import { PastoralAgentNotFoundError } from '@/use-cases/errors/pastoral-agent-no
 import { ServiceNotFoundError } from '@/use-cases/errors/service-not-found-error';
 import { AppointmentsDisabledError } from '@/use-cases/errors/appointments-disabled-error';
 import { D1PastoralAgentsDAF } from '@/services/database/d1/d1-pastoral-agents-daf';
+import { log } from '@/services/log';
 
 export const createInternalAppointment: ControllerFn = async (c) => {
   const { t, inputs } = getAppContext(c);
@@ -34,24 +35,37 @@ export const createInternalAppointment: ControllerFn = async (c) => {
       userRole: user?.role,
     });
 
-    try {
-      const notifyUseCase = makeNotifyAppointmentCreatedUseCase(c);
-      const notifyPromise = notifyUseCase.execute({
-        appointment,
-        source: 'internal_panel',
-        creatorRole: user?.role,
-      });
-
-      if (c.executionCtx?.waitUntil) {
-        c.executionCtx.waitUntil(notifyPromise);
-      } else {
-        await notifyPromise;
+    const notifyUseCase = makeNotifyAppointmentCreatedUseCase(c);
+    const notifyTask = async () => {
+      try {
+        await notifyUseCase.execute({
+          appointment,
+          source: 'internal_panel',
+          creatorRole: user?.role,
+        });
+      } catch (pushErr) {
+        await log({
+          env: c.env,
+          data: {
+            feature: 'push_notification',
+            action: 'notify_internal_appointment_created',
+            appointmentId: appointment.id,
+            agentId: appointment.agentId,
+            appointmentDate: appointment.appointmentDate,
+            startTime: appointment.startTime,
+            status: appointment.status,
+            creatorRole: user?.role,
+            creatorId: user?.id,
+          },
+          error: pushErr,
+        });
       }
-    } catch (pushErr) {
-      console.error(
-        'Failed to trigger push notification for internal appointment:',
-        pushErr,
-      );
+    };
+
+    if (c.executionCtx?.waitUntil) {
+      c.executionCtx.waitUntil(notifyTask());
+    } else {
+      await notifyTask();
     }
 
     return c.json(

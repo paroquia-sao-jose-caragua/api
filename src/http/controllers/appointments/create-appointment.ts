@@ -7,6 +7,7 @@ import { AddressRequiredForServiceError } from '@/use-cases/errors/address-requi
 import { PastoralAgentNotFoundError } from '@/use-cases/errors/pastoral-agent-not-found-error';
 import { ServiceNotFoundError } from '@/use-cases/errors/service-not-found-error';
 import { AppointmentsDisabledError } from '@/use-cases/errors/appointments-disabled-error';
+import { log } from '@/services/log';
 
 export const createAppointment: ControllerFn = async (c) => {
   const { t, inputs } = getAppContext(c);
@@ -22,23 +23,34 @@ export const createAppointment: ControllerFn = async (c) => {
       userRole: undefined,
     });
 
-    try {
-      const notifyUseCase = makeNotifyAppointmentCreatedUseCase(c);
-      const notifyPromise = notifyUseCase.execute({
-        appointment,
-        source: 'public_site',
-      });
-
-      if (c.executionCtx?.waitUntil) {
-        c.executionCtx.waitUntil(notifyPromise);
-      } else {
-        await notifyPromise;
+    const notifyUseCase = makeNotifyAppointmentCreatedUseCase(c);
+    const notifyTask = async () => {
+      try {
+        await notifyUseCase.execute({
+          appointment,
+          source: 'public_site',
+        });
+      } catch (pushErr) {
+        await log({
+          env: c.env,
+          data: {
+            feature: 'push_notification',
+            action: 'notify_site_appointment_created',
+            appointmentId: appointment.id,
+            agentId: appointment.agentId,
+            appointmentDate: appointment.appointmentDate,
+            startTime: appointment.startTime,
+            requesterName: appointment.requesterName,
+          },
+          error: pushErr,
+        });
       }
-    } catch (pushErr) {
-      console.error(
-        'Failed to trigger push notification for site appointment:',
-        pushErr,
-      );
+    };
+
+    if (c.executionCtx?.waitUntil) {
+      c.executionCtx.waitUntil(notifyTask());
+    } else {
+      await notifyTask();
     }
 
     return c.json(
