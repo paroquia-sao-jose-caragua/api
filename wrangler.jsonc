@@ -14,7 +14,9 @@
     "PANEL_BASE_URL": "http://localhost:3000",
     "SITE_BASE_URL": "http://localhost:3001",
     "S3_API_URL": "http://localhost:3333/attachments",
-    "RESEND_FROM_EMAIL": "Paróquia São José <nao-responda@paroquiasaojosecaragua.org.br>"
+    "RESEND_FROM_EMAIL": "Paróquia São José <nao-responda@paroquiasaojosecaragua.org.br>",
+    "VAPID_PUBLIC_KEY": "BG7yAjm7cEMvuOqjo5ST2sjkuih8fc-Cd4kXSKtFJX8Glp7_Yqgm_dJOZG8HsZv5-YTkP2_zE1m_0988l9kytI8",
+    "VAPID_SUBJECT": "mailto:contato@paroquiasaojosecaragua.org.br"
   },
   "d1_databases": [
     {
@@ -53,7 +55,9 @@
         "PANEL_BASE_URL": "https://panel-staging.paroquiasaojosecaragua.org.br",
         "SITE_BASE_URL": "https://staging.paroquiasaojosecaragua.org.br",
         "S3_API_URL": "https://cdn-staging.paroquiasaojosecaragua.org.br",
-        "RESEND_FROM_EMAIL": "Paróquia São José <nao-responda@paroquiasaojosecaragua.org.br>"
+        "RESEND_FROM_EMAIL": "Paróquia São José <nao-responda@paroquiasaojosecaragua.org.br>",
+        "VAPID_PUBLIC_KEY": "BG7yAjm7cEMvuOqjo5ST2sjkuih8fc-Cd4kXSKtFJX8Glp7_Yqgm_dJOZG8HsZv5-YTkP2_zE1m_0988l9kytI8",
+        "VAPID_SUBJECT": "mailto:contato@paroquiasaojosecaragua.org.br"
       },
       "d1_databases": [
         {
@@ -86,6 +90,9 @@
         "PANEL_BASE_URL": "https://panel.paroquiasaojosecaragua.org.br",
         "SITE_BASE_URL": "https://paroquiasaojosecaragua.org.br",
         "S3_API_URL": "https://cdn.paroquiasaojosecaragua.org.br",
+        "RESEND_FROM_EMAIL": "Paróquia São José <nao-responda@paroquiasaojosecaragua.org.br>",
+        "VAPID_PUBLIC_KEY": "BG7yAjm7cEMvuOqjo5ST2sjkuih8fc-Cd4kXSKtFJX8Glp7_Yqgm_dJOZG8HsZv5-YTkP2_zE1m_0988l9kytI8",
+        "VAPID_SUBJECT": "mailto:contato@paroquiasaojosecaragua.org.br"
       },
       "d1_databases": [
         {

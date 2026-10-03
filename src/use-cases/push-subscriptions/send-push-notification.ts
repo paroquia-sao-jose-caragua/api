@@ -1,5 +1,6 @@
 import type { PushSubscriptionEntity } from '@/entities/push-subscription';
 import type { PushSubscriptionsDAF } from '@/services/database/push-subscriptions-daf';
+import { buildPushPayload } from '@block65/webcrypto-web-push';
 
 interface SendPushNotificationPayload {
   title: string;
@@ -26,6 +27,9 @@ export class SendPushNotificationUseCase {
     private pushSubscriptionsDaf: PushSubscriptionsDAF,
     private siteBaseUrl = 'http://localhost:3000',
     private panelBaseUrl = 'http://localhost:3001',
+    private vapidSubject = 'mailto:contato@paroquiasaojosecaragua.org.br',
+    private vapidPublicKey?: string,
+    private vapidPrivateKey?: string,
   ) {}
 
   async execute(
@@ -82,14 +86,52 @@ export class SendPushNotificationUseCase {
             origin: sub.origin,
           };
 
-          const res = await fetch(sub.endpoint, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              TTL: '86400',
-            },
-            body: JSON.stringify(devicePayload),
-          });
+          let res: Response;
+
+          if (
+            this.vapidPublicKey &&
+            this.vapidPrivateKey &&
+            sub.p256dh &&
+            sub.auth
+          ) {
+            const pushPayload = await buildPushPayload(
+              {
+                data: JSON.stringify(devicePayload),
+                options: {
+                  ttl: 86400,
+                  urgency: 'high',
+                },
+              },
+              {
+                endpoint: sub.endpoint,
+                expirationTime: null,
+                keys: {
+                  p256dh: sub.p256dh,
+                  auth: sub.auth,
+                },
+              },
+              {
+                subject: this.vapidSubject,
+                publicKey: this.vapidPublicKey,
+                privateKey: this.vapidPrivateKey,
+              },
+            );
+
+            res = await fetch(sub.endpoint, {
+              method: 'POST',
+              headers: pushPayload.headers,
+              body: pushPayload.body,
+            });
+          } else {
+            res = await fetch(sub.endpoint, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                TTL: '86400',
+              },
+              body: JSON.stringify(devicePayload),
+            });
+          }
 
           if (res.status === 404 || res.status === 410) {
             // Expired/unsubscribed token -> remove from D1
