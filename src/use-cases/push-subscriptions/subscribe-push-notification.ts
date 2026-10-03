@@ -6,6 +6,7 @@ interface SubscribePushNotificationRequest {
   userName?: string | null;
   userId?: string | null;
   origin: "site" | "panel";
+  deviceId?: string | null;
   deviceInfo?: string | null;
   endpoint: string;
   p256dh: string;
@@ -22,9 +23,33 @@ export class SubscribePushNotificationUseCase {
   async execute(
     request: SubscribePushNotificationRequest
   ): Promise<SubscribePushNotificationResponse> {
-    const existing = await this.pushSubscriptionsDaf.findByEndpoint(
-      request.endpoint
-    );
+    let existing: PushSubscriptionEntity | null = null;
+
+    // 1. Look for existing device subscription by deviceId and origin
+    if (request.deviceId) {
+      existing = await this.pushSubscriptionsDaf.findByDeviceId(
+        request.deviceId,
+        request.origin
+      );
+    }
+
+    // 2. If not found by deviceId, and user is authenticated with deviceInfo:
+    // Enforce: "deve ser um aparelho por user agent e usuário, se o user agent for diferente, aí inclui."
+    if (!existing && request.userId && request.deviceInfo) {
+      existing = await this.pushSubscriptionsDaf.findByUserAndDevice(
+        request.userId,
+        request.deviceInfo,
+        request.origin,
+        request.deviceId
+      );
+    }
+
+    // 3. Fallback: Check if this push endpoint was already registered
+    if (!existing) {
+      existing = await this.pushSubscriptionsDaf.findByEndpoint(
+        request.endpoint
+      );
+    }
 
     const now = new Date().toISOString();
 
@@ -33,6 +58,7 @@ export class SubscribePushNotificationUseCase {
       userName: request.userName ?? existing?.userName ?? null,
       userId: request.userId ?? existing?.userId ?? null,
       origin: request.origin,
+      deviceId: request.deviceId ?? existing?.deviceId ?? null,
       deviceInfo: request.deviceInfo ?? existing?.deviceInfo ?? null,
       endpoint: request.endpoint,
       p256dh: request.p256dh,
@@ -41,7 +67,18 @@ export class SubscribePushNotificationUseCase {
       updatedAt: now,
     };
 
+    // Save or update subscription
     await this.pushSubscriptionsDaf.save(subscription);
+
+    // Clean up any other duplicates for this device, user agent or endpoint
+    await this.pushSubscriptionsDaf.cleanupDeviceDuplicates({
+      keepId: subscription.id,
+      origin: subscription.origin,
+      userId: subscription.userId,
+      deviceId: subscription.deviceId,
+      deviceInfo: subscription.deviceInfo,
+      endpoint: subscription.endpoint,
+    });
 
     return { subscription };
   }

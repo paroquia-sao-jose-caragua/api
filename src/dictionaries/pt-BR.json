@@ -91,6 +91,8 @@
   "invalid-or-expired-token": "O link de redefinição de senha é inválido ou expirou.",
   "invalid-current-password": "A senha atual informada está incorreta.",
   "user-not-found": "Usuário não encontrado.",
+  "user-updated-successfully": "Usuário atualizado com sucesso.",
+  "user-email-already-exists": "Este endereço de e-mail já está sendo utilizado por outro usuário.",
   "user-suspended-or-inactive": "Sua conta está suspensa ou inativa. Entre em contato com a administração.",
   "error-cannot-demote-last-admin": "Não é possível alterar o papel do único administrador ativo do sistema.",
   "error-cannot-suspend-last-admin": "Não é possível suspender o único administrador ativo do sistema.",

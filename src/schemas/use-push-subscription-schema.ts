@@ -6,6 +6,7 @@ export const useSubscribePushSchema = (t: TranslatorFn) => {
     userName: z.string().max(255).optional().nullable(),
     userId: z.string().max(50).optional().nullable(),
     origin: z.enum(["site", "panel"]).default("site"),
+    deviceId: z.string().max(100).optional().nullable(),
     deviceInfo: z.string().max(255).optional().nullable(),
     endpoint: z.string().min(1, t("required-field")),
     keys: z.object({
