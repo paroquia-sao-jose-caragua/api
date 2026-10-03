@@ -24,8 +24,6 @@ export const corsSetup: MiddlewareHandler = cors({
       (isDev && isLocalhost) ||
       (!!effectiveOrigin && allowedOrigins.includes(effectiveOrigin));
 
-    console.log({ isAllowed, allowedOrigins, origin, effectiveOrigin });
-
     return isAllowed ? effectiveOrigin : null;
   },
   allowHeaders: [
