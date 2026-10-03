@@ -1,6 +1,7 @@
 import { getAppContext } from '@/http/utils/getAppContext';
 import { useCreateAppointmentSchema } from '@/schemas/use-appointment-schema';
 import { makeCreateAppointmentUseCase } from '@/use-cases/factories/appointments/make-create-appointment-use-case';
+import { makeNotifyAppointmentCreatedUseCase } from '@/use-cases/factories/appointments/make-notify-appointment-created-use-case';
 import { AppointmentSlotUnavailableError } from '@/use-cases/errors/appointment-slot-unavailable-error';
 import { AddressRequiredForServiceError } from '@/use-cases/errors/address-required-for-service-error';
 import { PastoralAgentNotFoundError } from '@/use-cases/errors/pastoral-agent-not-found-error';
@@ -33,12 +34,32 @@ export const createInternalAppointment: ControllerFn = async (c) => {
       userRole: user?.role,
     });
 
+    try {
+      const notifyUseCase = makeNotifyAppointmentCreatedUseCase(c);
+      const notifyPromise = notifyUseCase.execute({
+        appointment,
+        source: 'internal_panel',
+        creatorRole: user?.role,
+      });
+
+      if (c.executionCtx?.waitUntil) {
+        c.executionCtx.waitUntil(notifyPromise);
+      } else {
+        await notifyPromise;
+      }
+    } catch (pushErr) {
+      console.error(
+        'Failed to trigger push notification for internal appointment:',
+        pushErr,
+      );
+    }
+
     return c.json(
       {
         message: t('appointment-created-successfully'),
         appointment,
       },
-      201
+      201,
     );
   } catch (err) {
     if (err instanceof AppointmentsDisabledError) {

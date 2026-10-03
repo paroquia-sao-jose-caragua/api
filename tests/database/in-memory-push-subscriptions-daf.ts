@@ -1,5 +1,5 @@
-import type { PushSubscriptionEntity } from "@/entities/push-subscription";
-import type { PushSubscriptionsDAF } from "@/services/database/push-subscriptions-daf";
+import type { PushSubscriptionEntity } from '@/entities/push-subscription';
+import type { PushSubscriptionsDAF } from '@/services/database/push-subscriptions-daf';
 
 export class InMemoryPushSubscriptionsDAF implements PushSubscriptionsDAF {
   public items: PushSubscriptionEntity[] = [];
@@ -8,27 +8,51 @@ export class InMemoryPushSubscriptionsDAF implements PushSubscriptionsDAF {
     return this.items.find((item) => item.id === id) ?? null;
   }
 
-  async findByEndpoint(endpoint: string): Promise<PushSubscriptionEntity | null> {
+  async findByEndpoint(
+    endpoint: string,
+  ): Promise<PushSubscriptionEntity | null> {
     return this.items.find((item) => item.endpoint === endpoint) ?? null;
   }
 
   async findAll(): Promise<PushSubscriptionEntity[]> {
     return [...this.items].sort(
-      (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      (a, b) =>
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
     );
   }
 
-  async findByOrigin(origin: "site" | "panel"): Promise<PushSubscriptionEntity[]> {
+  async findByOrigin(
+    origin: 'site' | 'panel',
+  ): Promise<PushSubscriptionEntity[]> {
     return this.items
       .filter((item) => item.origin === origin)
       .sort(
-        (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        (a, b) =>
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+      );
+  }
+
+  async findByUserIds(userIds: string[]): Promise<PushSubscriptionEntity[]> {
+    return this.items
+      .filter((item) => item.userId && userIds.includes(item.userId))
+      .sort(
+        (a, b) =>
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+      );
+  }
+
+  async findByRoles(roles: string[]): Promise<PushSubscriptionEntity[]> {
+    return this.items
+      .filter((item) => item.userRole && roles.includes(item.userRole))
+      .sort(
+        (a, b) =>
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
       );
   }
 
   async save(subscription: PushSubscriptionEntity): Promise<void> {
     const existingIndex = this.items.findIndex(
-      (item) => item.endpoint === subscription.endpoint
+      (item) => item.endpoint === subscription.endpoint,
     );
 
     if (existingIndex >= 0) {
