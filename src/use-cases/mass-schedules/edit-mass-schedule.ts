@@ -1,7 +1,6 @@
 import type { MassSchedule } from '@/entities/mass-schedule';
 import type { MassSchedulesDAF } from '@/services/database/mass-schedules-daf';
 import { ResourceNotFoundError } from '../errors/resource-not-found-error';
-import { makeId } from '../factories/make-id';
 
 interface EditMassScheduleUseCaseRequest {
   massScheduleId: string;
@@ -13,11 +12,10 @@ interface EditMassScheduleUseCaseRequest {
   dayOfWeek?: number;
   dayOfMonth?: number;
   weekOfMonth?: number;
-  monthOfYear?: number;
   startDate?: string;
   endDate?: string;
   active: boolean;
-  times: { startTime: string; endTime?: string }[]; // Array de horários no formato "HH:MM"
+  startTime: string; // "HH:MM"
 }
 
 interface EditMassScheduleUseCaseResponse {
@@ -37,11 +35,10 @@ export class EditMassScheduleUseCase {
     dayOfWeek,
     dayOfMonth,
     weekOfMonth,
-    monthOfYear,
     startDate,
     endDate,
     active,
-    times,
+    startTime,
   }: EditMassScheduleUseCaseRequest): Promise<EditMassScheduleUseCaseResponse> {
     const massSchedule = await this.massSchedulesDaf.findById(massScheduleId);
 
@@ -57,16 +54,11 @@ export class EditMassScheduleUseCase {
     massSchedule.dayOfWeek = dayOfWeek;
     massSchedule.dayOfMonth = dayOfMonth;
     massSchedule.weekOfMonth = weekOfMonth;
-    massSchedule.monthOfYear = monthOfYear;
     massSchedule.startDate = startDate;
     massSchedule.endDate = endDate;
     massSchedule.active = active;
-    massSchedule.times = times.map((time) => ({
-      id: makeId(),
-      scheduleId: massSchedule.id,
-      startTime: time.startTime,
-      endTime: time.endTime,
-    }));
+    massSchedule.startTime = startTime;
+    massSchedule.updatedAt = new Date().toISOString();
 
     await this.massSchedulesDaf.save(massSchedule);
 

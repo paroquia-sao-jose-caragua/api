@@ -142,8 +142,7 @@ O esquema SQL principal esta em [migrations/0001-init-db.sql](./migrations/0001-
 | `blog_post_drafts`         | Rascunhos de edição de publicações já existentes.         |
 | `blog_posts`               | Publicações efetivamente publicadas.                      |
 | `blog_post_history`        | Historico de publicação, edição e despublicação.          |
-| `mass_schedules`           | Regras recorrentes de horários de missa.                  |
-| `mass_schedule_times`      | Horários vinculados a uma regra de missa.                 |
+| `mass_schedules`           | Regras recorrentes de horários de missa com horário.      |
 | `mass_schedule_exceptions` | Exceções de horários de missa por data.                   |
 | `event_schedules`          | Eventos especéficos do calendário paroquial.              |
 | `migrations`               | Controle de migrações aplicadas.                          |

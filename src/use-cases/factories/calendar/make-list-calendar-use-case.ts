@@ -8,7 +8,6 @@ export function makeListCalendarUseCase(c: DomainContext) {
   const massSchedulesDaf = new D1MassSchedulesDAF(c.env.DB);
   const eventSchedulesDaf = new D1EventSchedulesDAF(c.env.DB);
   const massScheduleExceptionsDaf = new D1MassScheduleExceptionsDAF(c.env.DB);
-
   const communitiesDaf = new D1CommunitiesDAF(c.env.DB);
 
   const useCase = new ListCalendarUseCase(

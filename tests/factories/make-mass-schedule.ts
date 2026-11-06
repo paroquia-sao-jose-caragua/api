@@ -15,15 +15,8 @@ export function makeMassSchedule(
     recurrenceType: 'weekly',
     dayOfWeek: 0,
     active: true,
+    startTime: '09:00',
     createdAt: new Date().toISOString(),
-    times: [
-      {
-        id: makeId(),
-        startTime: '09:00',
-        endTime: '10:00',
-        scheduleId: massScheduleId,
-      },
-    ],
     ...overrides,
   };
 }

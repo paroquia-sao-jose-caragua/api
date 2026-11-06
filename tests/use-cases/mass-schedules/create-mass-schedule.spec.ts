@@ -27,21 +27,13 @@ describe('Create Mass Schedule Use Case', () => {
       type: 'ordinary',
       recurrenceType: 'weekly',
       dayOfWeek: 3, // Wednesday
-      times: [
-        {
-          startTime: '09:30',
-          endTime: '10:30',
-        },
-        {
-          startTime: '19:30',
-          endTime: '20:30',
-        },
-      ],
+      startTime: '09:30',
       isPrecept: false,
       active: true,
     });
 
     expect(massSchedule.id).toBeDefined();
+    expect(massSchedule.startTime).toBe('09:30');
   });
 
   it('should be able to create a ordinary weekly mass schedule as precept', async () => {
@@ -50,103 +42,59 @@ describe('Create Mass Schedule Use Case', () => {
       type: 'ordinary',
       recurrenceType: 'weekly',
       dayOfWeek: 0, // Sunday
-      times: [
-        {
-          startTime: '09:30',
-          endTime: '10:30',
-        },
-        {
-          startTime: '19:30',
-          endTime: '20:30',
-        },
-      ],
+      startTime: '09:30',
       isPrecept: true,
       active: true,
     });
 
     expect(massSchedule.id).toBeDefined();
+    expect(massSchedule.isPrecept).toBe(true);
   });
 
   it('should be able to create a devotional monthly mass schedule', async () => {
     const { massSchedule } = await sut.execute({
       communityId: community.id,
       type: 'devotional',
-      title: 'Saint Joseph',
       recurrenceType: 'monthly',
       dayOfMonth: 19,
-      times: [
-        {
-          startTime: '19:30',
-          endTime: '20:30',
-        },
-      ],
+      startTime: '19:30',
       isPrecept: false,
       active: true,
     });
 
     expect(massSchedule.id).toBeDefined();
+    expect(massSchedule.dayOfMonth).toBe(19);
   });
 
-  it('should be able to create a solemnity monthly mass schedule', async () => {
+  it('should be able to create a solemnity mass schedule', async () => {
     const { massSchedule } = await sut.execute({
       communityId: community.id,
       type: 'solemnity',
-      title: 'Saint Joseph',
-      recurrenceType: 'yearly',
-      dayOfMonth: 19,
-      monthOfYear: 3, // March
-      times: [
-        {
-          startTime: '19:30',
-          endTime: '20:30',
-        },
-      ],
+      recurrenceType: 'weekly',
+      dayOfWeek: 0,
+      startTime: '19:30',
       isPrecept: true,
       active: true,
     });
 
     expect(massSchedule.id).toBeDefined();
+    expect(massSchedule.type).toBe('solemnity');
   });
 
-  it('should be able to create a devotional weekly mass schedule on specific weekly of month', async () => {
+  it('should be able to create a devotional monthly mass schedule with week of month', async () => {
     const { massSchedule } = await sut.execute({
       communityId: community.id,
       type: 'devotional',
-      title: 'Communion of Reparation to the Immaculate Heart of Mary',
-      recurrenceType: 'weekly',
+      recurrenceType: 'monthly',
       dayOfWeek: 6, // Saturday
-      weekOfMonth: 1, // First week
-      times: [
-        {
-          startTime: '08:00',
-          endTime: '09:00',
-        },
-      ],
+      weekOfMonth: 1, // 1st week of the month
+      startTime: '08:00',
       isPrecept: false,
       active: true,
     });
 
     expect(massSchedule.id).toBeDefined();
-  });
-
-  it('should be able to create a mass schedule without endTime', async () => {
-    const { massSchedule } = await sut.execute({
-      communityId: community.id,
-      type: 'ordinary',
-      recurrenceType: 'weekly',
-      dayOfWeek: 6, // Saturday
-      times: [
-        {
-          startTime: '19:30',
-        },
-      ],
-      isPrecept: true,
-      active: true,
-    });
-
-    expect(massSchedule.id).toBeDefined();
-    expect(massSchedule.times[0].startTime).toBe('19:30');
-    expect(massSchedule.times[0].endTime).toBeUndefined();
+    expect(massSchedule.weekOfMonth).toBe(1);
   });
 
   it('should not be able to create a mass schedule with a non-existing community', async () => {
@@ -156,12 +104,7 @@ describe('Create Mass Schedule Use Case', () => {
         type: 'ordinary',
         recurrenceType: 'weekly',
         dayOfWeek: 2,
-        times: [
-          {
-            startTime: '18:00',
-            endTime: '19:00',
-          },
-        ],
+        startTime: '18:00',
         isPrecept: false,
         active: true,
       }),

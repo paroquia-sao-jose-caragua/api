@@ -73,10 +73,6 @@ export class ListCalendarUseCase {
           return false;
         }
 
-        if (schedule.recurrenceType === 'yearly') {
-          return schedule.monthOfYear === month && schedule.dayOfMonth === day;
-        }
-
         if (schedule.recurrenceType === 'monthly') {
           // Para devoções do primeiro sábado/sexta
           if (schedule.dayOfWeek !== undefined && schedule.weekOfMonth === 1) {
@@ -128,15 +124,11 @@ export class ListCalendarUseCase {
       );
       const devocionalTimes = massSchedulesInDate
         .filter((s) => s.type === 'devotional')
-        .flatMap((s) => s.times.map((t) => t.startTime));
+        .map((s) => s.startTime);
       if (hasDevotional) {
         massSchedulesInDate = massSchedulesInDate.filter((s) => {
           if (s.type === 'devotional') return true;
-
-          const overlapping = s.times.some((t) =>
-            devocionalTimes.includes(t.startTime),
-          );
-          return !overlapping;
+          return !devocionalTimes.includes(s.startTime);
         });
       }
 
@@ -149,20 +141,19 @@ export class ListCalendarUseCase {
               priorityTypes.indexOf(a.type) - priorityTypes.indexOf(b.type),
           )
           .filter((s) => (communityId ? s.communityId === communityId : true))
-          .flatMap((schedule) => {
+          .map((schedule) => {
             const community = communities.find(
               (c) => c.id === schedule.communityId,
             ) as Community;
 
-            return schedule.times.map((time) => ({
+            return {
               type: 'mass' as const,
               title: schedule.title,
               massType: schedule.type,
               massScheduleId: schedule.id,
               orientations: schedule.orientations,
               isPrecept: schedule.isPrecept,
-              startTime: time.startTime,
-              endTime: time.endTime,
+              startTime: schedule.startTime,
               status: 'active',
               community: {
                 id: schedule.communityId,
@@ -171,7 +162,7 @@ export class ListCalendarUseCase {
                 address: community.address,
                 coverId: community.coverId,
               },
-            }));
+            };
           });
 
       const eventSchedulesInDate = eventSchedules.filter(
@@ -208,10 +199,14 @@ export class ListCalendarUseCase {
         schedules.push(...eventSchedulesMapped);
       }
 
+      const isPreceptDay =
+        weekday === 0 || schedules.some((s) => Boolean(s.isPrecept));
+
       calendar.push({
         date,
         dayOfWeek: moment(date).weekday(),
         dayOfWeekLabel: moment(date).format('dddd'),
+        isPreceptDay,
         schedules: {
           active: schedules,
           exceptions: [],
@@ -266,15 +261,12 @@ export class ListCalendarUseCase {
           [];
 
         for (const schedule of day.schedules.active) {
+          const scheduleId =
+            'massScheduleId' in schedule ? schedule.massScheduleId : undefined;
           const matchingException = dayExceptions.find(
             (ex) =>
               ex.startTime === schedule.startTime &&
-              ex.scheduleId ===
-                massSchedules.find(
-                  (ms) =>
-                    ms.communityId === schedule.community.id &&
-                    ms.times.some((t) => t.startTime === schedule.startTime),
-                )?.id,
+              ex.scheduleId === scheduleId,
           );
 
           if (matchingException) {
