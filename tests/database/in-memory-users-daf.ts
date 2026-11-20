@@ -87,6 +87,18 @@ export class InMemoryUserDAF implements UsersDAF {
     return newUser;
   }
 
+  async update(
+    id: string,
+    data: { name?: string; email?: string },
+  ): Promise<User> {
+    const user = this.users.find((u) => u.id === id);
+    if (!user) throw new Error('User not found');
+    if (data.name !== undefined) user.name = data.name.trim();
+    if (data.email !== undefined) user.email = data.email.toLowerCase().trim();
+    user.updatedAt = new Date();
+    return user;
+  }
+
   async updateRole(id: string, role: UserRole): Promise<User> {
     const user = this.users.find((u) => u.id === id);
     if (!user) throw new Error('User not found');

@@ -24,16 +24,7 @@ describe('Edit Mass Schedule Use Case', () => {
       type: 'ordinary',
       recurrenceType: 'weekly',
       dayOfWeek: 3, // Wednesday
-      times: [
-        {
-          startTime: '09:30',
-          endTime: '10:30',
-        },
-        {
-          startTime: '19:30',
-          endTime: '20:30',
-        },
-      ],
+      startTime: '09:30',
       isPrecept: false,
       active: true,
     });
@@ -43,42 +34,9 @@ describe('Edit Mass Schedule Use Case', () => {
         id: massSchedule.id,
         type: 'ordinary',
         recurrenceType: 'weekly',
-        times: [
-          {
-            id: expect.any(String),
-            startTime: '09:30',
-            endTime: '10:30',
-            scheduleId: massSchedule.id,
-          },
-          {
-            id: expect.any(String),
-            startTime: '19:30',
-            endTime: '20:30',
-            scheduleId: massSchedule.id,
-          },
-        ],
+        startTime: '09:30',
       }),
     );
-  });
-
-  it('should be able to edit a mass schedule removing endTime', async () => {
-    const { massSchedule: newMassSchedule } = await sut.execute({
-      massScheduleId: massSchedule.id,
-      type: 'ordinary',
-      recurrenceType: 'weekly',
-      dayOfWeek: 3,
-      times: [
-        {
-          startTime: '19:30',
-        },
-      ],
-      isPrecept: false,
-      active: true,
-    });
-
-    expect(newMassSchedule.times).toHaveLength(1);
-    expect(newMassSchedule.times[0].startTime).toBe('19:30');
-    expect(newMassSchedule.times[0].endTime).toBeUndefined();
   });
 
   it('should not be able to edit a mass schedule with a non-existing id', async () => {
@@ -88,12 +46,7 @@ describe('Edit Mass Schedule Use Case', () => {
         type: 'ordinary',
         recurrenceType: 'weekly',
         dayOfWeek: 2,
-        times: [
-          {
-            startTime: '09:30',
-            endTime: '10:30',
-          },
-        ],
+        startTime: '09:30',
         isPrecept: false,
         active: true,
       }),

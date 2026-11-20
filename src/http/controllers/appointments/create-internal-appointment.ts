@@ -1,12 +1,14 @@
 import { getAppContext } from '@/http/utils/getAppContext';
 import { useCreateAppointmentSchema } from '@/schemas/use-appointment-schema';
 import { makeCreateAppointmentUseCase } from '@/use-cases/factories/appointments/make-create-appointment-use-case';
+import { makeNotifyAppointmentCreatedUseCase } from '@/use-cases/factories/appointments/make-notify-appointment-created-use-case';
 import { AppointmentSlotUnavailableError } from '@/use-cases/errors/appointment-slot-unavailable-error';
 import { AddressRequiredForServiceError } from '@/use-cases/errors/address-required-for-service-error';
 import { PastoralAgentNotFoundError } from '@/use-cases/errors/pastoral-agent-not-found-error';
 import { ServiceNotFoundError } from '@/use-cases/errors/service-not-found-error';
 import { AppointmentsDisabledError } from '@/use-cases/errors/appointments-disabled-error';
 import { D1PastoralAgentsDAF } from '@/services/database/d1/d1-pastoral-agents-daf';
+import { log } from '@/services/log';
 
 export const createInternalAppointment: ControllerFn = async (c) => {
   const { t, inputs } = getAppContext(c);
@@ -33,12 +35,45 @@ export const createInternalAppointment: ControllerFn = async (c) => {
       userRole: user?.role,
     });
 
+    const notifyUseCase = makeNotifyAppointmentCreatedUseCase(c);
+    const notifyTask = async () => {
+      try {
+        await notifyUseCase.execute({
+          appointment,
+          source: 'internal_panel',
+          creatorRole: user?.role,
+        });
+      } catch (pushErr) {
+        await log({
+          env: c.env,
+          data: {
+            feature: 'push_notification',
+            action: 'notify_internal_appointment_created',
+            appointmentId: appointment.id,
+            agentId: appointment.agentId,
+            appointmentDate: appointment.appointmentDate,
+            startTime: appointment.startTime,
+            status: appointment.status,
+            creatorRole: user?.role,
+            creatorId: user?.id,
+          },
+          error: pushErr,
+        });
+      }
+    };
+
+    if (c.executionCtx?.waitUntil) {
+      c.executionCtx.waitUntil(notifyTask());
+    } else {
+      await notifyTask();
+    }
+
     return c.json(
       {
         message: t('appointment-created-successfully'),
         appointment,
       },
-      201
+      201,
     );
   } catch (err) {
     if (err instanceof AppointmentsDisabledError) {

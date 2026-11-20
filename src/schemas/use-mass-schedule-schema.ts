@@ -17,8 +17,8 @@ export function useMassScheduleSchema(t: TranslatorFn) {
         .max(255, t('error-max-length', { max: 255 }))
         .optional(),
       isPrecept: z.boolean(),
-      recurrenceType: z.enum<('weekly' | 'monthly' | 'yearly')[]>(
-        ['weekly', 'monthly', 'yearly'],
+      recurrenceType: z.enum<('weekly' | 'monthly')[]>(
+        ['weekly', 'monthly'],
         t('invalid-recurrence-type'),
       ),
       dayOfWeek: z
@@ -35,11 +35,6 @@ export function useMassScheduleSchema(t: TranslatorFn) {
         .number()
         .min(1, t('error-week-of-month-range', { min: 1, max: 5 }))
         .max(5, t('error-week-of-month-range', { min: 1, max: 5 }))
-        .optional(),
-      monthOfYear: z
-        .number()
-        .min(1, t('error-month-of-year-range', { min: 1, max: 12 }))
-        .max(12, t('error-month-of-year-range', { min: 1, max: 12 }))
         .optional(),
       startDate: z.string(t('error-date-required')).refine(
         (date) => {
@@ -58,33 +53,18 @@ export function useMassScheduleSchema(t: TranslatorFn) {
           { message: t('invalid-end-date') },
         )
         .optional(),
-      times: z
-        .array(
-          z.object({
-            startTime: z.string().refine(
-              (time) => {
-                if (!time) return true;
-                const timeRegex = /^([0-1]\d|2[0-3]):([0-5]\d)$/;
-                return timeRegex.test(time);
-              },
-              { message: t('invalid-time-format') },
-            ),
-            endTime: z
-              .string()
-              .nullable()
-              .optional()
-              .refine(
-                (time) => {
-                  if (!time) return true;
-                  const timeRegex = /^([0-1]\d|2[0-3]):([0-5]\d)$/;
-                  return timeRegex.test(time);
-                },
-                { message: t('invalid-time-format') },
-              )
-              .transform((val) => (val && val.trim() !== '' ? val : undefined)),
-          }),
-        )
-        .min(1, t('error-at-least-one-time-required')),
+      startTime: z
+        .string(t('error-start-time-required'))
+        .min(1, t('error-start-time-required'))
+        .refine(
+          (time) => {
+            if (!time) return false;
+            const timeRegex = /^([0-1]\d|2[0-3]):([0-5]\d)$/;
+            return timeRegex.test(time);
+          },
+          { message: t('invalid-time-format') },
+        ),
+      active: z.boolean().optional(),
     })
     .superRefine((data, ctx) => {
       if (
@@ -100,7 +80,8 @@ export function useMassScheduleSchema(t: TranslatorFn) {
 
       if (
         data.recurrenceType === 'monthly' &&
-        (data.dayOfMonth === undefined || data.dayOfMonth === null) && data.weekOfMonth === undefined
+        (data.dayOfMonth === undefined || data.dayOfMonth === null) &&
+        data.weekOfMonth === undefined
       ) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,

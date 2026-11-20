@@ -1,11 +1,14 @@
 import { getAppContext } from '@/http/utils/getAppContext';
 import { useCreateAppointmentSchema } from '@/schemas/use-appointment-schema';
 import { makeCreateAppointmentUseCase } from '@/use-cases/factories/appointments/make-create-appointment-use-case';
+import { makeNotifyAppointmentCreatedUseCase } from '@/use-cases/factories/appointments/make-notify-appointment-created-use-case';
 import { AppointmentSlotUnavailableError } from '@/use-cases/errors/appointment-slot-unavailable-error';
 import { AddressRequiredForServiceError } from '@/use-cases/errors/address-required-for-service-error';
 import { PastoralAgentNotFoundError } from '@/use-cases/errors/pastoral-agent-not-found-error';
 import { ServiceNotFoundError } from '@/use-cases/errors/service-not-found-error';
 import { AppointmentsDisabledError } from '@/use-cases/errors/appointments-disabled-error';
+import { AppointmentAdvanceNoticeError } from '@/use-cases/errors/appointment-advance-notice-error';
+import { log } from '@/services/log';
 
 export const createAppointment: ControllerFn = async (c) => {
   const { t, inputs } = getAppContext(c);
@@ -21,16 +24,49 @@ export const createAppointment: ControllerFn = async (c) => {
       userRole: undefined,
     });
 
+    const notifyUseCase = makeNotifyAppointmentCreatedUseCase(c);
+    const notifyTask = async () => {
+      try {
+        await notifyUseCase.execute({
+          appointment,
+          source: 'public_site',
+        });
+      } catch (pushErr) {
+        await log({
+          env: c.env,
+          data: {
+            feature: 'push_notification',
+            action: 'notify_site_appointment_created',
+            appointmentId: appointment.id,
+            agentId: appointment.agentId,
+            appointmentDate: appointment.appointmentDate,
+            startTime: appointment.startTime,
+            requesterName: appointment.requesterName,
+          },
+          error: pushErr,
+        });
+      }
+    };
+
+    if (c.executionCtx?.waitUntil) {
+      c.executionCtx.waitUntil(notifyTask());
+    } else {
+      await notifyTask();
+    }
+
     return c.json(
       {
         message: t('appointment-created-successfully'),
         appointment,
       },
-      201
+      201,
     );
   } catch (err) {
     if (err instanceof AppointmentsDisabledError) {
       return c.json({ error: t('error-appointments-disabled') }, 403);
+    }
+    if (err instanceof AppointmentAdvanceNoticeError) {
+      return c.json({ error: t('error-appointment-advance-notice') }, 400);
     }
     if (err instanceof AppointmentSlotUnavailableError) {
       return c.json({ error: t('error-appointment-slot-unavailable') }, 409);

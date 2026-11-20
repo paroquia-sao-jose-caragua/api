@@ -175,6 +175,13 @@ export const addAgentBlockedDate: ControllerFn = async (c) => {
 };
 
 export const removeAgentBlockedDate: ControllerFn = async (c) => {
+  const { t } = getAppContext(c);
+  const id = c.req.param('id');
+
+  if (!(await checkAgentOwnership(c, id))) {
+    return c.json({ error: t('error-not-allowed') }, 403);
+  }
+
   const blockId = c.req.param('blockId');
   const useCase = makeManageAgentAvailabilitiesUseCase(c);
   await useCase.removeBlockedDate(blockId);

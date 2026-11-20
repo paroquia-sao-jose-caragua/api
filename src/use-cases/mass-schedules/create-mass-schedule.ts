@@ -14,10 +14,10 @@ interface CreateMassScheduleUseCaseRequest {
   dayOfWeek?: number;
   dayOfMonth?: number;
   weekOfMonth?: number;
-  monthOfYear?: number;
   startDate?: string;
   endDate?: string;
-  times: { startTime: string; endTime?: string }[]; // Array de horários no formato "HH:MM"
+  active?: boolean;
+  startTime: string; // "HH:MM"
 }
 
 interface CreateMassScheduleUseCaseResponse {
@@ -40,10 +40,10 @@ export class CreateMassScheduleUseCase {
     dayOfWeek,
     dayOfMonth,
     weekOfMonth,
-    monthOfYear,
     startDate,
     endDate,
-    times,
+    active,
+    startTime,
   }: CreateMassScheduleUseCaseRequest): Promise<CreateMassScheduleUseCaseResponse> {
     const community = await this.communitiesDaf.findById(communityId);
 
@@ -53,7 +53,7 @@ export class CreateMassScheduleUseCase {
 
     const massScheduleId = makeId();
 
-    const massSchedule = {
+    const massSchedule: MassSchedule = {
       id: massScheduleId,
       communityId,
       title,
@@ -64,17 +64,11 @@ export class CreateMassScheduleUseCase {
       dayOfWeek,
       dayOfMonth,
       weekOfMonth,
-      monthOfYear,
-      active: true,
+      active: active ?? true,
       startDate,
       endDate,
+      startTime,
       createdAt: new Date().toISOString(),
-      times: times.map((time) => ({
-        id: makeId(),
-        scheduleId: massScheduleId,
-        startTime: time.startTime,
-        endTime: time.endTime,
-      })),
     };
 
     await this.massSchedulesDaf.create(massSchedule);

@@ -7,7 +7,6 @@ type MassSchedule = {
   orientations?: string;
   isPrecept: boolean;
   startTime: string;
-  endTime?: string;
   cancellationReason?: string;
   community: {
     id: string;
@@ -61,6 +60,7 @@ export type CalendarSchedule = {
   date: string;
   dayOfWeek: number;
   dayOfWeekLabel: string;
+  isPreceptDay?: boolean;
   schedules: {
     active: Schedule[];
     exceptions: ExceptionSchedule[];

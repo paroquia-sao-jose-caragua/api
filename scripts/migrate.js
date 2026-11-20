@@ -23,25 +23,16 @@ const getAppliedMigrations = () => {
   try {
     const query = 'SELECT name FROM migrations ORDER BY applied_at;';
     const flags = IS_LOCAL ? ['--local'] : [];
-    const command = `npx wrangler d1 execute ${DB_NAME} ${flags.join(' ')} --command "${query}"`;
+    const command = `npx wrangler d1 execute ${DB_NAME} ${flags.join(' ')} --command "${query}" --json`;
 
     const result = execSync(command, { encoding: 'utf-8' });
-
-    // Parse the output to extract migration names
-    const lines = result.split('\n');
-    const migrations = [];
-
-    for (const line of lines) {
-      const match = line.match(/│\s*(\d{4}-[^│]+\.sql)/);
-      if (match) {
-        migrations.push(match[1]);
-      }
-    }
-
-    return migrations;
+    const parsed = JSON.parse(result);
+    const rows = parsed[0]?.results || [];
+    return rows.map((r) => r.name);
   } catch (error) {
     console.log(
-      'No migrations table found yet, will create it during migration.',
+      'No migrations table found yet or error reading migrations:',
+      error.message,
     );
     return [];
   }
@@ -53,9 +44,8 @@ const executeMigration = (filePath) => {
   console.log(`\n📝 Running migration: ${fileName}`);
 
   try {
-    const sql = fs.readFileSync(filePath, 'utf-8');
     const flags = IS_LOCAL ? ['--local'] : [];
-    const command = `wrangler d1 execute ${DB_NAME} ${flags.join(' ')} --file "${filePath}"`;
+    const command = `npx wrangler d1 execute ${DB_NAME} ${flags.join(' ')} --file "${filePath}"`;
 
     execSync(command, { stdio: 'inherit' });
     console.log(`✅ Migration applied: ${fileName}`);
@@ -78,9 +68,13 @@ const runMigrations = () => {
     process.exit(1);
   }
 
-  const pendingMigrations = allMigrations.filter(
-    (migration) => !appliedMigrations.includes(migration),
-  );
+  const pendingMigrations = allMigrations.filter((migration) => {
+    const baseName = migration.replace('.sql', '');
+    const prefix = migration.slice(0, 4);
+    return !appliedMigrations.some(
+      (applied) => applied === baseName || applied.startsWith(prefix),
+    );
+  });
 
   if (pendingMigrations.length === 0) {
     console.log('✅ All migrations are already applied!');
@@ -94,15 +88,15 @@ const runMigrations = () => {
 
   console.log('\n▶️  Applying pending migrations...');
 
-  //   let failedCount = 0;
-  //   for (const migration of pendingMigrations) {
-  //     const filePath = path.join(MIGRATIONS_DIR, migration);
-  //     if (!executeMigration(filePath)) {
-  //       failedCount++;
-  //     }
-  //   }
+  let failedCount = 0;
+  for (const migration of pendingMigrations) {
+    const filePath = path.join(MIGRATIONS_DIR, migration);
+    if (!executeMigration(filePath)) {
+      failedCount++;
+    }
+  }
 
-  console.log('\n ='.repeat(50));
+  console.log('\n' + '='.repeat(50));
 
   if (failedCount === 0) {
     console.log(

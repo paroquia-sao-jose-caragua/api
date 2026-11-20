@@ -55,5 +55,10 @@ declare global {
     // Databases and Storages
     DB: D1Database;
     R2_BUCKET: R2Bucket;
+
+    // Web Push (VAPID)
+    VAPID_PUBLIC_KEY?: string;
+    VAPID_PRIVATE_KEY?: string;
+    VAPID_SUBJECT?: string;
   };
 }

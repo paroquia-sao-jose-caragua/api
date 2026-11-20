@@ -1,5 +1,3 @@
-import type { MassScheduleTime } from './mass-schedule-time';
-
 export type MassSchedule = {
   id: string;
   communityId: string;
@@ -7,15 +5,14 @@ export type MassSchedule = {
   type: 'ordinary' | 'devotional' | 'solemnity';
   orientations?: string;
   isPrecept: boolean;
-  recurrenceType: 'weekly' | 'monthly' | 'yearly';
+  recurrenceType: 'weekly' | 'monthly';
   dayOfWeek?: number;
   dayOfMonth?: number;
   weekOfMonth?: number;
-  monthOfYear?: number;
   active: boolean;
   startDate?: string;
   endDate?: string;
   createdAt: string;
   updatedAt?: string;
-  times: MassScheduleTime[]; // Array de horários no formato "HH:MM"
+  startTime: string; // "HH:MM"
 };

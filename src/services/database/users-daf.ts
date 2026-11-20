@@ -27,6 +27,7 @@ export interface UsersDAF {
     status?: UserStatus;
     tokenVersion?: number;
   }): Promise<User>;
+  update(id: string, data: { name?: string; email?: string }): Promise<User>;
   updateRole(id: string, role: UserRole): Promise<User>;
   updateStatus(id: string, status: UserStatus): Promise<User>;
   updatePassword(id: string, passwordHash: string): Promise<User>;

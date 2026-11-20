@@ -12,6 +12,7 @@ import { updateUserStatus } from './update-user-status';
 import { revokeSessions } from './revoke-sessions';
 import { adminResetPassword } from './admin-reset-password';
 import { resendUserInvite } from './resend-user-invite';
+import { updateUser } from './update-user';
 import { verifyToken } from '@/http/middlewares/verifyToken';
 import { verifyUserRole } from '@/http/middlewares/verifyUserRole';
 
@@ -29,11 +30,38 @@ app.patch('/users/me/password', verifyToken, changePassword);
 // Rotas administrativas (apenas admin)
 app.get('/users', verifyToken, verifyUserRole('admin'), listUsers);
 app.get('/users/:id', verifyToken, verifyUserRole('admin'), getUser);
+app.put('/users/:id', verifyToken, verifyUserRole('admin'), updateUser);
+app.patch('/users/:id', verifyToken, verifyUserRole('admin'), updateUser);
 app.post('/users', verifyToken, verifyUserRole('admin'), createUser);
-app.patch('/users/:id/role', verifyToken, verifyUserRole('admin'), updateUserRole);
-app.patch('/users/:id/status', verifyToken, verifyUserRole('admin'), updateUserStatus);
-app.post('/users/:id/revoke-sessions', verifyToken, verifyUserRole('admin'), revokeSessions);
-app.post('/users/:id/reset-password', verifyToken, verifyUserRole('admin'), adminResetPassword);
-app.post('/users/:id/resend-invite', verifyToken, verifyUserRole('admin'), resendUserInvite);
+app.patch(
+  '/users/:id/role',
+  verifyToken,
+  verifyUserRole('admin'),
+  updateUserRole,
+);
+app.patch(
+  '/users/:id/status',
+  verifyToken,
+  verifyUserRole('admin'),
+  updateUserStatus,
+);
+app.post(
+  '/users/:id/revoke-sessions',
+  verifyToken,
+  verifyUserRole('admin'),
+  revokeSessions,
+);
+app.post(
+  '/users/:id/reset-password',
+  verifyToken,
+  verifyUserRole('admin'),
+  adminResetPassword,
+);
+app.post(
+  '/users/:id/resend-invite',
+  verifyToken,
+  verifyUserRole('admin'),
+  resendUserInvite,
+);
 
 export { app as userRoutes };

@@ -1,10 +1,6 @@
 import { DatabaseError } from '@/errors/DatabaseError';
 import type { User, UserRole, UserStatus } from '@/entities/user';
-import type {
-  ListUsersParams,
-  ListUsersResult,
-  UsersDAF,
-} from '../users-daf';
+import type { ListUsersParams, ListUsersResult, UsersDAF } from '../users-daf';
 
 type UserRow = {
   id: string;
@@ -165,6 +161,46 @@ export class D1UsersDAF implements UsersDAF {
     if (!user) {
       throw new DatabaseError('Failed to create user', {
         values: { email, role, status },
+      });
+    }
+
+    return mapRowToUser(user);
+  }
+
+  async update(
+    id: string,
+    data: { name?: string; email?: string },
+  ): Promise<User> {
+    const sets: string[] = ['updated_at = CURRENT_TIMESTAMP'];
+    const bindings: (string | number)[] = [];
+
+    if (data.name !== undefined) {
+      sets.push('name = ?');
+      bindings.push(data.name.trim());
+    }
+
+    if (data.email !== undefined) {
+      sets.push('email = ?');
+      bindings.push(data.email.toLowerCase().trim());
+    }
+
+    bindings.push(id);
+
+    const user = await this.d1
+      .prepare(
+        `
+        UPDATE users 
+        SET ${sets.join(', ')} 
+        WHERE id = ? 
+        RETURNING id, name, email, password_hash, role, status, last_login_at, token_version, created_at, updated_at
+      `,
+      )
+      .bind(...bindings)
+      .first<UserRow>();
+
+    if (!user) {
+      throw new DatabaseError('Failed to update user', {
+        values: { id, ...data },
       });
     }
 

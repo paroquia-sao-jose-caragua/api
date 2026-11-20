@@ -50,21 +50,8 @@ describe('List Communities Use Case', () => {
       dayOfWeek: 0,
       isPrecept: true,
       active: true,
+      startTime: '08:00',
       createdAt: new Date().toISOString(),
-      times: [
-        {
-          id: 'time-1',
-          scheduleId: 'schedule-1',
-          startTime: '08:00',
-          endTime: '09:00',
-        },
-        {
-          id: 'time-2',
-          scheduleId: 'schedule-1',
-          startTime: '19:30',
-          endTime: '20:30',
-        },
-      ],
     });
 
     await massSchedulesDaf.create({
@@ -75,15 +62,8 @@ describe('List Communities Use Case', () => {
       dayOfWeek: 3,
       isPrecept: false,
       active: true, // Active ordinary Wednesday should be included
+      startTime: '19:30',
       createdAt: new Date().toISOString(),
-      times: [
-        {
-          id: 'time-3',
-          scheduleId: 'schedule-2',
-          startTime: '19:30',
-          endTime: '20:30',
-        },
-      ],
     });
 
     await massSchedulesDaf.create({
@@ -94,15 +74,8 @@ describe('List Communities Use Case', () => {
       dayOfWeek: 5,
       isPrecept: false,
       active: false, // Inactive should be filtered out
+      startTime: '19:00',
       createdAt: new Date().toISOString(),
-      times: [
-        {
-          id: 'time-4',
-          scheduleId: 'schedule-3',
-          startTime: '19:00',
-          endTime: '20:00',
-        },
-      ],
     });
 
     await massSchedulesDaf.create({
@@ -113,35 +86,20 @@ describe('List Communities Use Case', () => {
       dayOfMonth: 19,
       isPrecept: false,
       active: true, // Devotional should be filtered out in home list
+      startTime: '19:30',
       createdAt: new Date().toISOString(),
-      times: [
-        {
-          id: 'time-5',
-          scheduleId: 'schedule-4',
-          startTime: '19:30',
-          endTime: '20:30',
-        },
-      ],
     });
 
     await massSchedulesDaf.create({
       id: 'schedule-5',
       communityId: 'community-1',
       type: 'solemnity',
-      recurrenceType: 'yearly',
+      recurrenceType: 'monthly',
       dayOfMonth: 25,
-      monthOfYear: 12,
       isPrecept: true,
       active: true, // Solemnity should be filtered out in home list
+      startTime: '10:00',
       createdAt: new Date().toISOString(),
-      times: [
-        {
-          id: 'time-6',
-          scheduleId: 'schedule-5',
-          startTime: '10:00',
-          endTime: '11:00',
-        },
-      ],
     });
 
     const { communities } = await sut.execute();
@@ -149,9 +107,9 @@ describe('List Communities Use Case', () => {
     expect(communities).toHaveLength(2);
     expect(communities[0].massSchedules).toHaveLength(2);
     expect(communities[0].massSchedules?.[0].id).toBe('schedule-1');
-    expect(communities[0].massSchedules?.[0].times).toHaveLength(2);
+    expect(communities[0].massSchedules?.[0].startTime).toBe('08:00');
     expect(communities[0].massSchedules?.[1].id).toBe('schedule-2');
-    expect(communities[0].massSchedules?.[1].times).toHaveLength(1);
+    expect(communities[0].massSchedules?.[1].startTime).toBe('19:30');
     expect(communities[1].massSchedules).toHaveLength(0);
   });
 

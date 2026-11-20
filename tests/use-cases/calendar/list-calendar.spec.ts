@@ -8,7 +8,7 @@ import { InMemoryMassSchedulesDAF } from '@tests/database/in-memory-mass-schedul
 import { makeCommunity } from '@tests/factories/make-community';
 import { makeEventSchedule } from '@tests/factories/make-event-schedule';
 import { makeMassSchedule } from '@tests/factories/make-mass-schedule';
-import { beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 let massSchedulesDaf: InMemoryMassSchedulesDAF;
 let eventSchedulesDaf: InMemoryEventSchedulesDAF;
@@ -21,6 +21,9 @@ let communitySacredHeart: Community;
 
 describe('List Calendar Use Case', () => {
   beforeEach(() => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2025-01-01T00:00:00Z'));
+
     massSchedulesDaf = new InMemoryMassSchedulesDAF();
     eventSchedulesDaf = new InMemoryEventSchedulesDAF();
     massScheduleExceptionsDaf = new InMemoryMassScheduleExceptionsDAF();
@@ -52,14 +55,7 @@ describe('List Calendar Use Case', () => {
         active: true,
         recurrenceType: 'weekly',
         dayOfWeek: 4, // Wednesday
-        times: [
-          {
-            id: makeId(),
-            scheduleId: '01K8M79EYSVFJEJZVRAEFVM6QD',
-            startTime: '19:30',
-            endTime: '20:30',
-          },
-        ],
+        startTime: '19:30',
       }),
       makeMassSchedule({
         id: '01K8PTP0X913WM25APCM8HVZ7M',
@@ -68,14 +64,7 @@ describe('List Calendar Use Case', () => {
         active: true,
         recurrenceType: 'weekly',
         dayOfWeek: 5, // Thursday
-        times: [
-          {
-            id: makeId(),
-            scheduleId: '01K8PTP0X913WM25APCM8HVZ7M',
-            startTime: '19:30',
-            endTime: '20:30',
-          },
-        ],
+        startTime: '19:30',
       }),
       makeMassSchedule({
         id: '01K8M7GZSNKGNQE99PJJ197BHZ',
@@ -85,20 +74,17 @@ describe('List Calendar Use Case', () => {
         recurrenceType: 'weekly',
         dayOfWeek: 0, // Sunday
         isPrecept: true,
-        times: [
-          {
-            id: makeId(),
-            scheduleId: '01K8M7GZSNKGNQE99PJJ197BHZ',
-            startTime: '9:30',
-            endTime: '10:30',
-          },
-          {
-            id: makeId(),
-            scheduleId: '01K8M7GZSNKGNQE99PJJ197BHZ',
-            startTime: '19:30',
-            endTime: '20:30',
-          },
-        ],
+        startTime: '9:30',
+      }),
+      makeMassSchedule({
+        id: '01K8M7GZSNKGNQE99PJJ197BHZ-2',
+        communityId: communityParish.id,
+        type: 'ordinary',
+        active: true,
+        recurrenceType: 'weekly',
+        dayOfWeek: 0, // Sunday
+        isPrecept: true,
+        startTime: '19:30',
       }),
       makeMassSchedule({
         id: '01K8M9V3CWPMSRJM008P88HTKK',
@@ -108,14 +94,7 @@ describe('List Calendar Use Case', () => {
         recurrenceType: 'weekly',
         dayOfWeek: 0, // Sunday
         isPrecept: true,
-        times: [
-          {
-            id: makeId(),
-            scheduleId: '01K8M9V3CWPMSRJM008P88HTKK',
-            startTime: '11:00',
-            endTime: '12:00',
-          },
-        ],
+        startTime: '11:00',
       }),
       makeMassSchedule({
         id: '01K8M7J2DCBSM5SAXS33PZNB5S',
@@ -125,14 +104,7 @@ describe('List Calendar Use Case', () => {
         active: true,
         recurrenceType: 'monthly',
         dayOfMonth: 19,
-        times: [
-          {
-            id: makeId(),
-            scheduleId: '01K8M7J2DCBSM5SAXS33PZNB5S',
-            startTime: '19:30',
-            endTime: '20:30',
-          },
-        ],
+        startTime: '19:30',
       }),
       makeMassSchedule({
         id: '01K8M7W6TPHMH3805PW53GWNQM',
@@ -141,17 +113,11 @@ describe('List Calendar Use Case', () => {
         title: 'São José',
         active: true,
         isPrecept: true,
-        recurrenceType: 'yearly',
+        recurrenceType: 'monthly',
         dayOfMonth: 19,
-        monthOfYear: 3, // March
-        times: [
-          {
-            id: makeId(),
-            scheduleId: '01K8M7W6TPHMH3805PW53GWNQM',
-            startTime: '19:30',
-            endTime: '20:30',
-          },
-        ],
+        startDate: '2025-03-01',
+        endDate: '2025-03-31',
+        startTime: '19:30',
       }),
       makeMassSchedule({
         id: '01K8M7MSRJABN7P072NCSGEEVW',
@@ -162,14 +128,7 @@ describe('List Calendar Use Case', () => {
         recurrenceType: 'monthly',
         weekOfMonth: 1,
         dayOfWeek: 6, // Saturday
-        times: [
-          {
-            id: makeId(),
-            scheduleId: '01K8M7MSRJABN7P072NCSGEEVW',
-            startTime: '08:00',
-            endTime: '09:00',
-          },
-        ],
+        startTime: '08:00',
       }),
       makeMassSchedule({
         id: '01K8M7PBAYX1AVKVQX0M5EKD5C',
@@ -180,18 +139,15 @@ describe('List Calendar Use Case', () => {
         recurrenceType: 'monthly',
         weekOfMonth: 1,
         dayOfWeek: 5, // Friday
-        times: [
-          {
-            id: makeId(),
-            scheduleId: '01K8M7PBAYX1AVKVQX0M5EKD5C',
-            startTime: '08:00',
-            endTime: '09:00',
-          },
-        ],
+        startTime: '08:00',
       }),
     ];
 
     massSchedulesDaf.massSchedules.push(...massSchedules);
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
   });
 
   it('should return schedules for first friday and first saturday of the month', async () => {
@@ -202,34 +158,38 @@ describe('List Calendar Use Case', () => {
         expect.objectContaining({
           date: '2025-01-03',
           dayOfWeek: 5,
-          schedules: expect.arrayContaining([
-            expect.objectContaining({
-              type: 'mass',
-              massType: 'devotional',
-              title: 'Sagrado Coração de Jesus',
-              community: expect.objectContaining({
-                id: communitySacredHeart.id,
-                name: communitySacredHeart.name,
-                address: communitySacredHeart.address,
+          schedules: expect.objectContaining({
+            active: expect.arrayContaining([
+              expect.objectContaining({
+                type: 'mass',
+                massType: 'devotional',
+                title: 'Sagrado Coração de Jesus',
+                community: expect.objectContaining({
+                  id: communitySacredHeart.id,
+                  name: communitySacredHeart.name,
+                  address: communitySacredHeart.address,
+                }),
               }),
-            }),
-          ]),
+            ]),
+          }),
         }),
         expect.objectContaining({
           date: '2025-01-04',
           dayOfWeek: 6,
-          schedules: expect.arrayContaining([
-            expect.objectContaining({
-              type: 'mass',
-              massType: 'devotional',
-              title: 'Imaculado Coração de Maria',
-              community: expect.objectContaining({
-                id: communityParish.id,
-                name: communityParish.name,
-                address: communityParish.address,
+          schedules: expect.objectContaining({
+            active: expect.arrayContaining([
+              expect.objectContaining({
+                type: 'mass',
+                massType: 'devotional',
+                title: 'Imaculado Coração de Maria',
+                community: expect.objectContaining({
+                  id: communityParish.id,
+                  name: communityParish.name,
+                  address: communityParish.address,
+                }),
               }),
-            }),
-          ]),
+            ]),
+          }),
         }),
       ]),
     );
@@ -243,41 +203,40 @@ describe('List Calendar Use Case', () => {
         expect.objectContaining({
           date: '2025-01-19',
           dayOfWeek: 0,
-          schedules: expect.arrayContaining([
-            expect.objectContaining({
-              type: 'mass',
-              massType: 'ordinary',
-              startTime: '9:30',
-              endTime: '10:30',
-              community: expect.objectContaining({
-                id: communityParish.id,
-                name: communityParish.name,
-                address: communityParish.address,
+          schedules: expect.objectContaining({
+            active: expect.arrayContaining([
+              expect.objectContaining({
+                type: 'mass',
+                massType: 'ordinary',
+                startTime: '9:30',
+                community: expect.objectContaining({
+                  id: communityParish.id,
+                  name: communityParish.name,
+                  address: communityParish.address,
+                }),
               }),
-            }),
-            expect.objectContaining({
-              type: 'mass',
-              massType: 'ordinary',
-              startTime: '11:00',
-              endTime: '12:00',
-              community: expect.objectContaining({
-                id: communitySacredHeart.id,
-                name: communitySacredHeart.name,
-                address: communitySacredHeart.address,
+              expect.objectContaining({
+                type: 'mass',
+                massType: 'ordinary',
+                startTime: '11:00',
+                community: expect.objectContaining({
+                  id: communitySacredHeart.id,
+                  name: communitySacredHeart.name,
+                  address: communitySacredHeart.address,
+                }),
               }),
-            }),
-            expect.objectContaining({
-              type: 'mass',
-              massType: 'ordinary',
-              startTime: '19:30',
-              endTime: '20:30',
-              community: expect.objectContaining({
-                id: communityParish.id,
-                name: communityParish.name,
-                address: communityParish.address,
+              expect.objectContaining({
+                type: 'mass',
+                massType: 'ordinary',
+                startTime: '19:30',
+                community: expect.objectContaining({
+                  id: communityParish.id,
+                  name: communityParish.name,
+                  address: communityParish.address,
+                }),
               }),
-            }),
-          ]),
+            ]),
+          }),
         }),
       ]),
     );
@@ -291,18 +250,20 @@ describe('List Calendar Use Case', () => {
         expect.objectContaining({
           date: '2025-03-19',
           dayOfWeek: 3, // Wednesday
-          schedules: [
-            expect.objectContaining({
-              type: 'mass',
-              massType: 'solemnity',
-              title: 'São José',
-              community: expect.objectContaining({
-                id: communityParish.id,
-                name: communityParish.name,
-                address: communityParish.address,
+          schedules: expect.objectContaining({
+            active: [
+              expect.objectContaining({
+                type: 'mass',
+                massType: 'solemnity',
+                title: 'São José',
+                community: expect.objectContaining({
+                  id: communityParish.id,
+                  name: communityParish.name,
+                  address: communityParish.address,
+                }),
               }),
-            }),
-          ],
+            ],
+          }),
         }),
       ]),
     );
@@ -316,18 +277,20 @@ describe('List Calendar Use Case', () => {
         expect.objectContaining({
           date: '2025-06-19',
           dayOfWeek: 4, // Thursday
-          schedules: [
-            expect.objectContaining({
-              type: 'mass',
-              massType: 'devotional',
-              title: 'Padroeiro São José',
-              community: expect.objectContaining({
-                id: communityParish.id,
-                name: communityParish.name,
-                address: communityParish.address,
+          schedules: expect.objectContaining({
+            active: [
+              expect.objectContaining({
+                type: 'mass',
+                massType: 'devotional',
+                title: 'Padroeiro São José',
+                community: expect.objectContaining({
+                  id: communityParish.id,
+                  name: communityParish.name,
+                  address: communityParish.address,
+                }),
               }),
-            }),
-          ],
+            ],
+          }),
         }),
       ]),
     );
@@ -349,13 +312,15 @@ describe('List Calendar Use Case', () => {
     const dayWithException = calendar.find((day) => day.date === '2025-01-05');
 
     expect(dayWithException).toBeDefined();
-    expect(dayWithException?.schedules).toEqual(
+    expect(dayWithException?.schedules.exceptions).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
           type: 'mass',
           massType: 'ordinary',
           startTime: '9:30',
-          status: 'canceled',
+          exception: expect.objectContaining({
+            reason: 'No mass this day',
+          }),
         }),
       ]),
     );
@@ -388,28 +353,39 @@ describe('List Calendar Use Case', () => {
         expect.objectContaining({
           date: '2025-01-15',
           dayOfWeek: 3,
-          schedules: expect.arrayContaining([
-            expect.objectContaining({
-              type: 'event',
-              title: 'Aniversário da Paróquia',
-              community: expect.objectContaining({
-                id: communityParish.id,
-                name: communityParish.name,
-                address: communityParish.address,
+          schedules: expect.objectContaining({
+            active: expect.arrayContaining([
+              expect.objectContaining({
+                type: 'event',
+                title: 'Aniversário da Paróquia',
+                community: expect.objectContaining({
+                  id: communityParish.id,
+                  name: communityParish.name,
+                  address: communityParish.address,
+                }),
               }),
-            }),
-            expect.objectContaining({
-              type: 'event',
-              title: 'Festa do Sagrado Coração',
-              community: expect.objectContaining({
-                id: communitySacredHeart.id,
-                name: communitySacredHeart.name,
-                address: communitySacredHeart.address,
+              expect.objectContaining({
+                type: 'event',
+                title: 'Festa do Sagrado Coração',
+                community: expect.objectContaining({
+                  id: communitySacredHeart.id,
+                  name: communitySacredHeart.name,
+                  address: communitySacredHeart.address,
+                }),
               }),
-            }),
-          ]),
+            ]),
+          }),
         }),
       ]),
     );
+  });
+
+  it('should mark Sunday as precept day', async () => {
+    const { calendar } = await sut.execute({ month: 3, year: 2025 });
+
+    const sunday = calendar.find((day) => day.dayOfWeek === 0);
+
+    expect(sunday).toBeDefined();
+    expect(sunday?.isPreceptDay).toBe(true);
   });
 });
