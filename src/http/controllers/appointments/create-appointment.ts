@@ -7,6 +7,7 @@ import { AddressRequiredForServiceError } from '@/use-cases/errors/address-requi
 import { PastoralAgentNotFoundError } from '@/use-cases/errors/pastoral-agent-not-found-error';
 import { ServiceNotFoundError } from '@/use-cases/errors/service-not-found-error';
 import { AppointmentsDisabledError } from '@/use-cases/errors/appointments-disabled-error';
+import { AppointmentAdvanceNoticeError } from '@/use-cases/errors/appointment-advance-notice-error';
 import { log } from '@/services/log';
 
 export const createAppointment: ControllerFn = async (c) => {
@@ -63,6 +64,9 @@ export const createAppointment: ControllerFn = async (c) => {
   } catch (err) {
     if (err instanceof AppointmentsDisabledError) {
       return c.json({ error: t('error-appointments-disabled') }, 403);
+    }
+    if (err instanceof AppointmentAdvanceNoticeError) {
+      return c.json({ error: t('error-appointment-advance-notice') }, 400);
     }
     if (err instanceof AppointmentSlotUnavailableError) {
       return c.json({ error: t('error-appointment-slot-unavailable') }, 409);

@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { InMemoryAppointmentServicesDAF } from '../../database/in-memory-appointment-services-daf';
 import { InMemoryPastoralAgentsDAF } from '../../database/in-memory-pastoral-agents-daf';
 import { InMemoryAgentAvailabilitiesDAF } from '../../database/in-memory-agent-availabilities-daf';
@@ -23,6 +23,7 @@ import { DeleteAppointmentUseCase } from '@/use-cases/appointments/delete-appoin
 import { AppointmentSlotUnavailableError } from '@/use-cases/errors/appointment-slot-unavailable-error';
 import { AddressRequiredForServiceError } from '@/use-cases/errors/address-required-for-service-error';
 import { AppointmentsDisabledError } from '@/use-cases/errors/appointments-disabled-error';
+import { AppointmentAdvanceNoticeError } from '@/use-cases/errors/appointment-advance-notice-error';
 import { NotAllowedError } from '@/use-cases/errors/not-allowed-error';
 
 
@@ -34,6 +35,9 @@ describe('Appointments Use Cases', () => {
   let settingsDaf: InMemoryAppointmentSettingsDAF;
 
   beforeEach(async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-10-01T10:00:00-03:00'));
+
     servicesDaf = new InMemoryAppointmentServicesDAF();
     agentsDaf = new InMemoryPastoralAgentsDAF();
     availabilitiesDaf = new InMemoryAgentAvailabilitiesDAF();
@@ -92,6 +96,10 @@ describe('Appointments Use Cases', () => {
         active: true,
       },
     ]);
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
   });
 
   it('should list active appointment services', async () => {
@@ -585,6 +593,92 @@ describe('Appointments Use Cases', () => {
 
     const found = await appointmentsDaf.findById(appointment.id);
     expect(found).toBeNull();
+  });
+
+  it('should require 1 day advance notice for public appointment creation and slots, but allow same-day for staff', async () => {
+    // 2026-10-07 is a Wednesday (dayOfWeek = 3) at 10:00 BRT
+    vi.setSystemTime(new Date('2026-10-07T10:00:00-03:00'));
+
+    const createSut = new CreateAppointmentUseCase(
+      appointmentsDaf,
+      agentsDaf,
+      servicesDaf,
+      settingsDaf
+    );
+    const slotsSut = new GetAvailableSlotsUseCase(
+      agentsDaf,
+      availabilitiesDaf,
+      appointmentsDaf,
+      servicesDaf,
+      settingsDaf
+    );
+
+    // Public: same-day slots should be empty
+    const publicTodaySlots = await slotsSut.execute({
+      agentId: 'agent-1',
+      date: '2026-10-07',
+      serviceId: 'srv-confession',
+      bypassSettingsCheck: false,
+    });
+    expect(publicTodaySlots.slots).toEqual([]);
+
+    // Internal/staff: same-day slots should still be returned
+    const internalTodaySlots = await slotsSut.execute({
+      agentId: 'agent-1',
+      date: '2026-10-07',
+      serviceId: 'srv-confession',
+      bypassSettingsCheck: true,
+    });
+    expect(internalTodaySlots.slots).toHaveLength(4);
+
+    // Public: creating same-day appointment should throw AppointmentAdvanceNoticeError
+    await expect(
+      createSut.execute({
+        agentId: 'agent-1',
+        serviceId: 'srv-confession',
+        requesterName: 'Fiel Mesmo Dia',
+        requesterPhone: '12991112233',
+        appointmentDate: '2026-10-07',
+        startTime: '14:00',
+      })
+    ).rejects.toBeInstanceOf(AppointmentAdvanceNoticeError);
+
+    // Public: creating past-date appointment should also throw AppointmentAdvanceNoticeError
+    await expect(
+      createSut.execute({
+        agentId: 'agent-1',
+        serviceId: 'srv-confession',
+        requesterName: 'Fiel Passado',
+        requesterPhone: '12991112233',
+        appointmentDate: '2026-10-06',
+        startTime: '14:00',
+      })
+    ).rejects.toBeInstanceOf(AppointmentAdvanceNoticeError);
+
+    // Staff: creating same-day appointment should succeed
+    const { appointment: staffAppointment } = await createSut.execute({
+      agentId: 'agent-1',
+      serviceId: 'srv-confession',
+      requesterName: 'Agendado no Painel',
+      requesterPhone: '12991112233',
+      appointmentDate: '2026-10-07',
+      startTime: '14:00',
+      userRole: 'secretary',
+    });
+    expect(staffAppointment.id).toBeDefined();
+    expect(staffAppointment.status).toBe('confirmed');
+
+    // Public: creating appointment for next day (2026-10-08) should succeed
+    const { appointment: nextDayAppointment } = await createSut.execute({
+      agentId: 'agent-1',
+      serviceId: 'srv-confession',
+      requesterName: 'Fiel Dia Seguinte',
+      requesterPhone: '12991112233',
+      appointmentDate: '2026-10-08',
+      startTime: '14:00',
+    });
+    expect(nextDayAppointment.id).toBeDefined();
+    expect(nextDayAppointment.status).toBe('pending');
   });
 });
 

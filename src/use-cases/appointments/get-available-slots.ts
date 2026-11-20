@@ -6,6 +6,7 @@ import type { AppointmentSettingsDAF } from '@/services/database/appointment-set
 import { PastoralAgentNotFoundError } from '../errors/pastoral-agent-not-found-error';
 import { ServiceNotFoundError } from '../errors/service-not-found-error';
 import { AppointmentsDisabledError } from '../errors/appointments-disabled-error';
+import { getBrazilNowParts } from './date-helpers';
 
 export interface AvailableSlot {
   startTime: string; // "14:00"
@@ -80,23 +81,12 @@ export class GetAvailableSlotsUseCase {
     const dayOfWeek = dateUtc.getUTCDay();
 
     // Check today date and current time in America/Sao_Paulo
-    const nowBrazilStr = new Intl.DateTimeFormat('en-CA', {
-      timeZone: 'America/Sao_Paulo',
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: false,
-    }).format(new Date());
-
-    // format: "YYYY-MM-DD, HH:mm" or "YYYY-MM-DD HH:mm"
-    const [todayDatePart, nowTimePart] = nowBrazilStr.split(/,?\s+/);
+    const { todayDate: todayDatePart, currentMinutes: currentMinutesNow } =
+      getBrazilNowParts();
     const isPastDate = date < todayDatePart;
     const isToday = date === todayDatePart;
-    const currentMinutesNow = nowTimePart ? timeToMinutes(nowTimePart) : 0;
 
-    if (isPastDate) {
+    if (isPastDate || (!bypassSettingsCheck && isToday)) {
       return { date, dayOfWeek, slots: [] };
     }
 

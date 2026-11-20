@@ -10,6 +10,8 @@ import { ServiceNotFoundError } from '../errors/service-not-found-error';
 import { AppointmentSlotUnavailableError } from '../errors/appointment-slot-unavailable-error';
 import { AddressRequiredForServiceError } from '../errors/address-required-for-service-error';
 import { AppointmentsDisabledError } from '../errors/appointments-disabled-error';
+import { AppointmentAdvanceNoticeError } from '../errors/appointment-advance-notice-error';
+import { getBrazilNowParts } from './date-helpers';
 
 interface CreateAppointmentUseCaseRequest {
   agentId: string;
@@ -87,6 +89,13 @@ export class CreateAppointmentUseCase {
       const settings = await this.appointmentSettingsDAF.get();
       if (!settings.enabled) {
         throw new AppointmentsDisabledError(settings.suspendedMessage);
+      }
+    }
+
+    if (!isStaff) {
+      const { todayDate } = getBrazilNowParts();
+      if (appointmentDate <= todayDate) {
+        throw new AppointmentAdvanceNoticeError();
       }
     }
     const agent = await this.pastoralAgentsDAF.findById(agentId);

@@ -103,6 +103,7 @@
   "user-not-pending": "O convite só pode ser reenviado para usuários com status pendente.",
   "error-appointment-not-found": "Agendamento não encontrado.",
   "error-appointment-slot-unavailable": "Este horário já foi preenchido ou não está mais disponível. Por favor, escolha outro horário.",
+  "error-appointment-advance-notice": "O agendamento deve ser solicitado com pelo menos 1 dia de antecedência.",
   "error-service-not-found": "Serviço de atendimento não encontrado.",
   "error-pastoral-agent-not-found": "Agente pastoral não encontrado.",
   "error-address-required-for-service": "O endereço completo é obrigatório para este tipo de atendimento.",
