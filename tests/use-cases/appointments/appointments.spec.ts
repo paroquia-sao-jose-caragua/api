@@ -23,6 +23,7 @@ import { DeleteAppointmentUseCase } from '@/use-cases/appointments/delete-appoin
 import { AppointmentSlotUnavailableError } from '@/use-cases/errors/appointment-slot-unavailable-error';
 import { AddressRequiredForServiceError } from '@/use-cases/errors/address-required-for-service-error';
 import { AppointmentsDisabledError } from '@/use-cases/errors/appointments-disabled-error';
+import { NotAllowedError } from '@/use-cases/errors/not-allowed-error';
 import { AppointmentAdvanceNoticeError } from '@/use-cases/errors/appointment-advance-notice-error';
 import { NotAllowedError } from '@/use-cases/errors/not-allowed-error';
 
@@ -679,6 +680,75 @@ describe('Appointments Use Cases', () => {
     });
     expect(nextDayAppointment.id).toBeDefined();
     expect(nextDayAppointment.status).toBe('pending');
+  });
+
+  it('should allow staff to create internal commitments with free duration and block overlapping public slots', async () => {
+    const createSut = new CreateAppointmentUseCase(
+      appointmentsDaf,
+      agentsDaf,
+      servicesDaf,
+      settingsDaf
+    );
+    const slotsSut = new GetAvailableSlotsUseCase(
+      agentsDaf,
+      availabilitiesDaf,
+      appointmentsDaf,
+      servicesDaf,
+      settingsDaf
+    );
+
+    // Public users cannot create commitments
+    await expect(() =>
+      createSut.execute({
+        kind: 'commitment',
+        title: 'Reunião',
+        agentId: 'agent-1',
+        appointmentDate: '2026-10-07',
+        startTime: '14:00',
+        durationMinutes: 120,
+      })
+    ).rejects.toBeInstanceOf(NotAllowedError);
+
+    // Staff creates a 1-hour commitment from 14:00 to 15:00 without serviceId or requester info
+    const { appointment: commitment } = await createSut.execute({
+      kind: 'commitment',
+      title: 'Reunião do CPP',
+      agentId: 'agent-1',
+      appointmentDate: '2026-10-07',
+      startTime: '14:00',
+      durationMinutes: 60,
+      userRole: 'pastoral_agent',
+    });
+
+    expect(commitment.kind).toBe('commitment');
+    expect(commitment.title).toBe('Reunião do CPP');
+    expect(commitment.serviceId).toBeNull();
+    expect(commitment.endTime).toBe('15:00');
+    expect(commitment.status).toBe('confirmed');
+
+    // Overlapping public slots (14:00, 14:30) should be blocked, leaving 15:00 and 15:30 open
+    const available = await slotsSut.execute({
+      agentId: 'agent-1',
+      date: '2026-10-07',
+      serviceId: 'srv-confession',
+    });
+    const times = available.slots.map((s) => s.startTime);
+    expect(times).not.toContain('14:00');
+    expect(times).not.toContain('14:30');
+    expect(times).toContain('15:00');
+    expect(times).toContain('15:30');
+
+    // Creating a public appointment overlapping the commitment (14:30) should fail
+    await expect(() =>
+      createSut.execute({
+        agentId: 'agent-1',
+        serviceId: 'srv-confession',
+        requesterName: 'Fiel Conflito',
+        requesterPhone: '12999990000',
+        appointmentDate: '2026-10-07',
+        startTime: '14:30',
+      })
+    ).rejects.toBeInstanceOf(AppointmentSlotUnavailableError);
   });
 });
 

@@ -19,6 +19,10 @@ export const createAppointment: ControllerFn = async (c) => {
     const useCase = makeCreateAppointmentUseCase(c);
     const { appointment } = await useCase.execute({
       ...data,
+      kind: 'appointment',
+      title: null,
+      endTime: null,
+      durationMinutes: null,
       status: 'pending',
       privatePastoralNotes: undefined,
       userRole: undefined,

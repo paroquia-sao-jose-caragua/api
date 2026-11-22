@@ -1,6 +1,8 @@
 import type { AppointmentService } from './appointment-service';
 import type { PastoralAgent } from './pastoral-agent';
 
+export type AppointmentKind = 'appointment' | 'commitment';
+
 export type AppointmentStatus =
   | 'pending'
   | 'confirmed'
@@ -17,10 +19,12 @@ export interface PatientConditions {
 export interface Appointment {
   id: string;
   agentId: string;
-  serviceId: string;
+  serviceId: string | null;
   communityId: string | null;
-  requesterName: string;
-  requesterPhone: string;
+  kind?: AppointmentKind;
+  title?: string | null;
+  requesterName: string | null;
+  requesterPhone: string | null;
   requesterEmail: string | null;
   requesterRelationship: string | null;
   patientName: string | null;
@@ -43,5 +47,6 @@ export interface Appointment {
   community?: {
     id: string;
     name: string;
+    address?: string | null;
   } | null;
 }

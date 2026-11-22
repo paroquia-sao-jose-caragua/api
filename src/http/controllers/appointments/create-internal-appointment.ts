@@ -35,37 +35,39 @@ export const createInternalAppointment: ControllerFn = async (c) => {
       userRole: user?.role,
     });
 
-    const notifyUseCase = makeNotifyAppointmentCreatedUseCase(c);
-    const notifyTask = async () => {
-      try {
-        await notifyUseCase.execute({
-          appointment,
-          source: 'internal_panel',
-          creatorRole: user?.role,
-        });
-      } catch (pushErr) {
-        await log({
-          env: c.env,
-          data: {
-            feature: 'push_notification',
-            action: 'notify_internal_appointment_created',
-            appointmentId: appointment.id,
-            agentId: appointment.agentId,
-            appointmentDate: appointment.appointmentDate,
-            startTime: appointment.startTime,
-            status: appointment.status,
+    if (appointment.kind !== 'commitment') {
+      const notifyUseCase = makeNotifyAppointmentCreatedUseCase(c);
+      const notifyTask = async () => {
+        try {
+          await notifyUseCase.execute({
+            appointment,
+            source: 'internal_panel',
             creatorRole: user?.role,
-            creatorId: user?.id,
-          },
-          error: pushErr,
-        });
-      }
-    };
+          });
+        } catch (pushErr) {
+          await log({
+            env: c.env,
+            data: {
+              feature: 'push_notification',
+              action: 'notify_internal_appointment_created',
+              appointmentId: appointment.id,
+              agentId: appointment.agentId,
+              appointmentDate: appointment.appointmentDate,
+              startTime: appointment.startTime,
+              status: appointment.status,
+              creatorRole: user?.role,
+              creatorId: user?.id,
+            },
+            error: pushErr,
+          });
+        }
+      };
 
-    if (c.executionCtx?.waitUntil) {
-      c.executionCtx.waitUntil(notifyTask());
-    } else {
-      await notifyTask();
+      if (c.executionCtx?.waitUntil) {
+        c.executionCtx.waitUntil(notifyTask());
+      } else {
+        await notifyTask();
+      }
     }
 
     return c.json(
