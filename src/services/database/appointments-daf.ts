@@ -19,6 +19,13 @@ export interface AppointmentsDAF {
     startTime: string,
     excludeAppointmentId?: string
   ): Promise<number>;
+  countOverlapping(
+    agentId: string,
+    date: string,
+    startTime: string,
+    endTime: string,
+    excludeAppointmentId?: string
+  ): Promise<number>;
   update(appointment: Appointment): Promise<void>;
   delete(id: string): Promise<void>;
   updateStatus(

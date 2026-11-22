@@ -1,4 +1,9 @@
-import type { Appointment, PatientConditions, AppointmentStatus } from '@/entities/appointment';
+import type {
+  Appointment,
+  AppointmentKind,
+  PatientConditions,
+  AppointmentStatus,
+} from '@/entities/appointment';
 import type { UserRole } from '@/entities/user';
 import type { AppointmentsDAF } from '@/services/database/appointments-daf';
 import type { PastoralAgentsDAF } from '@/services/database/pastoral-agents-daf';
@@ -12,11 +17,13 @@ import { NotAllowedError } from '../errors/not-allowed-error';
 
 interface UpdateAppointmentUseCaseRequest {
   id: string;
+  kind?: AppointmentKind;
+  title?: string | null;
   agentId: string;
-  serviceId: string;
+  serviceId?: string | null;
   communityId?: string | null;
-  requesterName: string;
-  requesterPhone: string;
+  requesterName?: string | null;
+  requesterPhone?: string | null;
   requesterEmail?: string | null;
   requesterRelationship?: string | null;
   patientName?: string | null;
@@ -24,6 +31,8 @@ interface UpdateAppointmentUseCaseRequest {
   patientConditions?: PatientConditions | null;
   appointmentDate: string; // "YYYY-MM-DD"
   startTime: string; // "14:00"
+  endTime?: string | null;
+  durationMinutes?: number | null;
   requesterNotes?: string | null;
   status?: AppointmentStatus;
   privatePastoralNotes?: string | null;
@@ -56,6 +65,8 @@ export class UpdateAppointmentUseCase {
 
   async execute({
     id,
+    kind,
+    title,
     agentId,
     serviceId,
     communityId,
@@ -68,6 +79,8 @@ export class UpdateAppointmentUseCase {
     patientConditions,
     appointmentDate,
     startTime,
+    endTime: requestedEndTime,
+    durationMinutes,
     requesterNotes,
     status,
     privatePastoralNotes,
@@ -95,38 +108,60 @@ export class UpdateAppointmentUseCase {
       throw new PastoralAgentNotFoundError();
     }
 
-    const service = await this.appointmentServicesDAF.findById(serviceId);
-    if (!service || !service.active) {
-      throw new ServiceNotFoundError();
+    const resolvedKind: AppointmentKind = kind || existing.kind || 'appointment';
+    const startMinutes = timeToMinutes(startTime);
+    let endTime: string;
+    let resolvedServiceId: string | null = null;
+
+    if (resolvedKind === 'commitment') {
+      if (requestedEndTime && timeToMinutes(requestedEndTime) > startMinutes) {
+        endTime = requestedEndTime;
+      } else if (durationMinutes && durationMinutes > 0) {
+        endTime = minutesToTime(startMinutes + durationMinutes);
+      } else {
+        const existingDuration = Math.max(
+          15,
+          timeToMinutes(existing.endTime) - timeToMinutes(existing.startTime)
+        );
+        endTime = minutesToTime(startMinutes + existingDuration);
+      }
+    } else {
+      if (!serviceId) {
+        throw new ServiceNotFoundError();
+      }
+      const service = await this.appointmentServicesDAF.findById(serviceId);
+      if (!service || !service.active) {
+        throw new ServiceNotFoundError();
+      }
+      if (service.requiresAddress && (!patientAddress || !patientAddress.trim())) {
+        throw new AddressRequiredForServiceError();
+      }
+      resolvedServiceId = serviceId;
+      endTime = minutesToTime(startMinutes + service.defaultDurationMinutes);
     }
 
-    if (service.requiresAddress && (!patientAddress || !patientAddress.trim())) {
-      throw new AddressRequiredForServiceError();
-    }
-
-    // Check slot availability excluding current appointment id
-    const existingCount = await this.appointmentsDAF.countBySlot(
+    // Check slot overlap excluding current appointment id
+    const overlappingCount = await this.appointmentsDAF.countOverlapping(
       agentId,
       appointmentDate,
       startTime,
+      endTime,
       id
     );
 
-    if (existingCount > 0) {
+    if (overlappingCount > 0) {
       throw new AppointmentSlotUnavailableError();
     }
-
-    const startMinutes = timeToMinutes(startTime);
-    const endMinutes = startMinutes + service.defaultDurationMinutes;
-    const endTime = minutesToTime(endMinutes);
 
     const updatedAppointment: Appointment = {
       ...existing,
       agentId,
-      serviceId,
+      serviceId: resolvedServiceId,
       communityId: communityId || agent.communityId || null,
-      requesterName: requesterName.trim(),
-      requesterPhone: requesterPhone.trim(),
+      kind: resolvedKind,
+      title: resolvedKind === 'commitment' ? (title ?? existing.title ?? null)?.trim() || null : null,
+      requesterName: requesterName?.trim() || null,
+      requesterPhone: requesterPhone?.trim() || null,
       requesterEmail: requesterEmail?.trim() || null,
       requesterRelationship: requesterRelationship?.trim() || null,
       patientName: patientName?.trim() || null,

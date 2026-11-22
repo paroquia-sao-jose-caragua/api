@@ -1,5 +1,10 @@
 import { ulid } from 'serverless-crypto-utils/id-generation';
-import type { Appointment, PatientConditions, AppointmentStatus } from '@/entities/appointment';
+import type {
+  Appointment,
+  AppointmentKind,
+  PatientConditions,
+  AppointmentStatus,
+} from '@/entities/appointment';
 import type { UserRole } from '@/entities/user';
 import type { AppointmentsDAF } from '@/services/database/appointments-daf';
 import type { PastoralAgentsDAF } from '@/services/database/pastoral-agents-daf';
@@ -11,14 +16,17 @@ import { AppointmentSlotUnavailableError } from '../errors/appointment-slot-unav
 import { AddressRequiredForServiceError } from '../errors/address-required-for-service-error';
 import { AppointmentsDisabledError } from '../errors/appointments-disabled-error';
 import { AppointmentAdvanceNoticeError } from '../errors/appointment-advance-notice-error';
+import { NotAllowedError } from '../errors/not-allowed-error';
 import { getBrazilNowParts } from './date-helpers';
 
 interface CreateAppointmentUseCaseRequest {
+  kind?: AppointmentKind;
+  title?: string | null;
   agentId: string;
-  serviceId: string;
+  serviceId?: string | null;
   communityId?: string | null;
-  requesterName: string;
-  requesterPhone: string;
+  requesterName?: string | null;
+  requesterPhone?: string | null;
   requesterEmail?: string | null;
   requesterRelationship?: string | null;
   patientName?: string | null;
@@ -26,6 +34,8 @@ interface CreateAppointmentUseCaseRequest {
   patientConditions?: PatientConditions | null;
   appointmentDate: string; // "YYYY-MM-DD"
   startTime: string; // "14:00"
+  endTime?: string | null;
+  durationMinutes?: number | null;
   requesterNotes?: string | null;
   status?: AppointmentStatus;
   privatePastoralNotes?: string | null;
@@ -63,6 +73,8 @@ export class CreateAppointmentUseCase {
   ) {}
 
   async execute({
+    kind = 'appointment',
+    title,
     agentId,
     serviceId,
     communityId,
@@ -75,6 +87,8 @@ export class CreateAppointmentUseCase {
     patientConditions,
     appointmentDate,
     startTime,
+    endTime: requestedEndTime,
+    durationMinutes,
     requesterNotes,
     status,
     privatePastoralNotes,
@@ -84,6 +98,10 @@ export class CreateAppointmentUseCase {
       userRole === 'admin' ||
       userRole === 'secretary' ||
       userRole === 'pastoral_agent';
+
+    if (kind === 'commitment' && !isStaff) {
+      throw new NotAllowedError();
+    }
 
     if (this.appointmentSettingsDAF && !isStaff) {
       const settings = await this.appointmentSettingsDAF.get();
@@ -103,29 +121,43 @@ export class CreateAppointmentUseCase {
       throw new PastoralAgentNotFoundError();
     }
 
-    const service = await this.appointmentServicesDAF.findById(serviceId);
-    if (!service || !service.active) {
-      throw new ServiceNotFoundError();
+    const startMinutes = timeToMinutes(startTime);
+    let endTime: string;
+    let resolvedServiceId: string | null = null;
+
+    if (kind === 'commitment') {
+      if (requestedEndTime && timeToMinutes(requestedEndTime) > startMinutes) {
+        endTime = requestedEndTime;
+      } else {
+        const mins = durationMinutes && durationMinutes > 0 ? durationMinutes : 60;
+        endTime = minutesToTime(startMinutes + mins);
+      }
+    } else {
+      if (!serviceId) {
+        throw new ServiceNotFoundError();
+      }
+      const service = await this.appointmentServicesDAF.findById(serviceId);
+      if (!service || !service.active) {
+        throw new ServiceNotFoundError();
+      }
+      if (service.requiresAddress && (!patientAddress || !patientAddress.trim())) {
+        throw new AddressRequiredForServiceError();
+      }
+      resolvedServiceId = serviceId;
+      endTime = minutesToTime(startMinutes + service.defaultDurationMinutes);
     }
 
-    if (service.requiresAddress && (!patientAddress || !patientAddress.trim())) {
-      throw new AddressRequiredForServiceError();
-    }
-
-    // Check if slot is still available
-    const existingCount = await this.appointmentsDAF.countBySlot(
+    // Check if time range overlaps with any existing non-cancelled appointment/commitment
+    const overlappingCount = await this.appointmentsDAF.countOverlapping(
       agentId,
       appointmentDate,
-      startTime
+      startTime,
+      endTime
     );
 
-    if (existingCount > 0) {
+    if (overlappingCount > 0) {
       throw new AppointmentSlotUnavailableError();
     }
-
-    const startMinutes = timeToMinutes(startTime);
-    const endMinutes = startMinutes + service.defaultDurationMinutes;
-    const endTime = minutesToTime(endMinutes);
 
     const initialStatus: AppointmentStatus =
       status || (isStaff ? 'confirmed' : 'pending');
@@ -133,10 +165,12 @@ export class CreateAppointmentUseCase {
     const appointment: Appointment = {
       id: ulid(),
       agentId,
-      serviceId,
+      serviceId: resolvedServiceId,
       communityId: communityId || agent.communityId || null,
-      requesterName: requesterName.trim(),
-      requesterPhone: requesterPhone.trim(),
+      kind,
+      title: kind === 'commitment' ? title?.trim() || null : null,
+      requesterName: requesterName?.trim() || null,
+      requesterPhone: requesterPhone?.trim() || null,
       requesterEmail: requesterEmail?.trim() || null,
       requesterRelationship: requesterRelationship?.trim() || null,
       patientName: patientName?.trim() || null,

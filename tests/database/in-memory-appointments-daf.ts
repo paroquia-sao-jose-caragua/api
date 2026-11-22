@@ -45,6 +45,24 @@ export class InMemoryAppointmentsDAF implements AppointmentsDAF {
     ).length;
   }
 
+  async countOverlapping(
+    agentId: string,
+    date: string,
+    startTime: string,
+    endTime: string,
+    excludeAppointmentId?: string
+  ): Promise<number> {
+    return this.items.filter(
+      (a) =>
+        a.agentId === agentId &&
+        a.appointmentDate === date &&
+        a.status !== 'cancelled' &&
+        a.startTime < endTime &&
+        a.endTime > startTime &&
+        (!excludeAppointmentId || a.id !== excludeAppointmentId)
+    ).length;
+  }
+
   async update(appointment: Appointment): Promise<void> {
     const index = this.items.findIndex((a) => a.id === appointment.id);
     if (index !== -1) {

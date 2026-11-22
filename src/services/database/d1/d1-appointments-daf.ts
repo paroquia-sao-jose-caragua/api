@@ -1,14 +1,21 @@
-import type { Appointment, AppointmentStatus, PatientConditions } from '@/entities/appointment';
+import type {
+  Appointment,
+  AppointmentKind,
+  AppointmentStatus,
+  PatientConditions,
+} from '@/entities/appointment';
 import type { AppointmentsDAF, AppointmentsFilters } from '../appointments-daf';
 import type { AppointmentServiceCategory } from '@/entities/appointment-service';
 
 interface AppointmentRow {
   id: string;
   agent_id: string;
-  service_id: string;
+  service_id: string | null;
   community_id: string | null;
-  requester_name: string;
-  requester_phone: string;
+  kind: string | null;
+  title: string | null;
+  requester_name: string | null;
+  requester_phone: string | null;
   requester_email: string | null;
   requester_relationship: string | null;
   patient_name: string | null;
@@ -38,6 +45,7 @@ interface AppointmentRow {
   agent_email?: string | null;
   agent_photo_id?: string | null;
   community_name?: string | null;
+  community_address?: string | null;
 }
 
 export class D1AppointmentsDAF implements AppointmentsDAF {
@@ -62,6 +70,8 @@ export class D1AppointmentsDAF implements AppointmentsDAF {
       agentId: row.agent_id,
       serviceId: row.service_id,
       communityId: row.community_id,
+      kind: (row.kind === 'commitment' ? 'commitment' : 'appointment') as AppointmentKind,
+      title: row.title ?? null,
       requesterName: row.requester_name,
       requesterPhone: row.requester_phone,
       requesterEmail: row.requester_email,
@@ -79,7 +89,7 @@ export class D1AppointmentsDAF implements AppointmentsDAF {
       cancellationReason: row.cancellation_reason,
       createdAt: row.created_at,
       updatedAt: row.updated_at,
-      service: row.service_title
+      service: row.service_id && row.service_title
         ? {
             id: row.service_id,
             title: row.service_title,
@@ -109,6 +119,7 @@ export class D1AppointmentsDAF implements AppointmentsDAF {
         ? {
             id: row.community_id,
             name: row.community_name || '',
+            address: row.community_address || null,
           }
         : null,
     };
@@ -129,7 +140,8 @@ export class D1AppointmentsDAF implements AppointmentsDAF {
         ag.phone as agent_phone,
         ag.email as agent_email,
         ag.photo_id as agent_photo_id,
-        c.name as community_name
+        c.name as community_name,
+        c.address as community_address
       FROM appointments a
       LEFT JOIN appointment_services s ON s.id = a.service_id
       LEFT JOIN pastoral_agents ag ON ag.id = a.agent_id
@@ -143,18 +155,21 @@ export class D1AppointmentsDAF implements AppointmentsDAF {
       .prepare(`
         INSERT INTO appointments (
           id, agent_id, service_id, community_id,
+          kind, title,
           requester_name, requester_phone, requester_email, requester_relationship,
           patient_name, patient_address, patient_conditions,
           appointment_date, start_time, end_time,
           status, access_token, requester_notes, private_pastoral_notes, cancellation_reason,
           created_at, updated_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `)
       .bind(
         appointment.id,
         appointment.agentId,
         appointment.serviceId,
         appointment.communityId,
+        appointment.kind || 'appointment',
+        appointment.title ?? null,
         appointment.requesterName,
         appointment.requesterPhone,
         appointment.requesterEmail,
@@ -263,6 +278,37 @@ export class D1AppointmentsDAF implements AppointmentsDAF {
     return res?.count || 0;
   }
 
+  async countOverlapping(
+    agentId: string,
+    date: string,
+    startTime: string,
+    endTime: string,
+    excludeAppointmentId?: string
+  ): Promise<number> {
+    let sql = `
+      SELECT COUNT(*) as count
+      FROM appointments
+      WHERE agent_id = ?
+        AND appointment_date = ?
+        AND status != 'cancelled'
+        AND start_time < ?
+        AND end_time > ?
+    `;
+    const bindings: any[] = [agentId, date, endTime, startTime];
+
+    if (excludeAppointmentId) {
+      sql += ' AND id != ?';
+      bindings.push(excludeAppointmentId);
+    }
+
+    const res = await this.d1
+      .prepare(sql)
+      .bind(...bindings)
+      .first<{ count: number }>();
+
+    return res?.count || 0;
+  }
+
   async update(appointment: Appointment): Promise<void> {
     const now = new Date().toISOString();
     await this.d1
@@ -271,6 +317,8 @@ export class D1AppointmentsDAF implements AppointmentsDAF {
           agent_id = ?,
           service_id = ?,
           community_id = ?,
+          kind = ?,
+          title = ?,
           requester_name = ?,
           requester_phone = ?,
           requester_email = ?,
@@ -292,6 +340,8 @@ export class D1AppointmentsDAF implements AppointmentsDAF {
         appointment.agentId,
         appointment.serviceId,
         appointment.communityId,
+        appointment.kind || 'appointment',
+        appointment.title ?? null,
         appointment.requesterName,
         appointment.requesterPhone,
         appointment.requesterEmail,
