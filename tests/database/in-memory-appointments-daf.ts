@@ -104,4 +104,40 @@ export class InMemoryAppointmentsDAF implements AppointmentsDAF {
       item.updatedAt = new Date().toISOString();
     }
   }
+
+  async findUnnotifiedForSecretary(): Promise<Appointment[]> {
+    return this.items.filter(
+      (a) =>
+        (!a.kind || a.kind === 'appointment') &&
+        a.status !== 'cancelled' &&
+        !a.secretaryNotifiedAt,
+    );
+  }
+
+  async markSecretaryNotified(ids: string[], notifiedAt?: string): Promise<void> {
+    const ts = notifiedAt || new Date().toISOString();
+    for (const item of this.items) {
+      if (ids.includes(item.id)) {
+        item.secretaryNotifiedAt = ts;
+      }
+    }
+  }
+
+  async findUnnotifiedConfirmedForAgents(): Promise<Appointment[]> {
+    return this.items.filter(
+      (a) =>
+        (!a.kind || a.kind === 'appointment') &&
+        a.status === 'confirmed' &&
+        !a.agentNotifiedAt,
+    );
+  }
+
+  async markAgentNotified(ids: string[], notifiedAt?: string): Promise<void> {
+    const ts = notifiedAt || new Date().toISOString();
+    for (const item of this.items) {
+      if (ids.includes(item.id)) {
+        item.agentNotifiedAt = ts;
+      }
+    }
+  }
 }

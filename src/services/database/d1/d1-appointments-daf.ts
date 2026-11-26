@@ -406,4 +406,76 @@ export class D1AppointmentsDAF implements AppointmentsDAF {
       .bind(cancellationReason, now, token)
       .run();
   }
+
+  async findUnnotifiedForSecretary(): Promise<Appointment[]> {
+    const { results } = await this.d1
+      .prepare(`
+        SELECT a.*,
+          s.title AS service_title, s.category AS service_category,
+          s.description AS service_description, s.default_duration_minutes AS service_duration,
+          s.requires_address AS service_requires_address,
+          ag.name AS agent_name, ag.title AS agent_title, ag.acting_role AS agent_role,
+          ag.phone AS agent_phone, ag.email AS agent_email, ag.photo_id AS agent_photo_id,
+          c.name AS community_name, c.address AS community_address
+        FROM appointments a
+        LEFT JOIN appointment_services s ON a.service_id = s.id
+        LEFT JOIN pastoral_agents ag ON a.agent_id = ag.id
+        LEFT JOIN communities c ON a.community_id = c.id
+        WHERE (a.kind IS NULL OR a.kind = 'appointment')
+          AND a.status != 'cancelled'
+          AND a.secretary_notified_at IS NULL
+        ORDER BY a.created_at ASC
+      `)
+      .all<AppointmentRow>();
+
+    return (results || []).map((row) => this.mapRowToEntity(row));
+  }
+
+  async markSecretaryNotified(ids: string[], notifiedAt?: string): Promise<void> {
+    if (ids.length === 0) return;
+    const timestamp = notifiedAt || new Date().toISOString();
+    const placeholders = ids.map(() => '?').join(', ');
+    await this.d1
+      .prepare(
+        `UPDATE appointments SET secretary_notified_at = ? WHERE id IN (${placeholders})`,
+      )
+      .bind(timestamp, ...ids)
+      .run();
+  }
+
+  async findUnnotifiedConfirmedForAgents(): Promise<Appointment[]> {
+    const { results } = await this.d1
+      .prepare(`
+        SELECT a.*,
+          s.title AS service_title, s.category AS service_category,
+          s.description AS service_description, s.default_duration_minutes AS service_duration,
+          s.requires_address AS service_requires_address,
+          ag.name AS agent_name, ag.title AS agent_title, ag.acting_role AS agent_role,
+          ag.phone AS agent_phone, ag.email AS agent_email, ag.photo_id AS agent_photo_id,
+          c.name AS community_name, c.address AS community_address
+        FROM appointments a
+        LEFT JOIN appointment_services s ON a.service_id = s.id
+        LEFT JOIN pastoral_agents ag ON a.agent_id = ag.id
+        LEFT JOIN communities c ON a.community_id = c.id
+        WHERE (a.kind IS NULL OR a.kind = 'appointment')
+          AND a.status = 'confirmed'
+          AND a.agent_notified_at IS NULL
+        ORDER BY a.appointment_date ASC, a.start_time ASC
+      `)
+      .all<AppointmentRow>();
+
+    return (results || []).map((row) => this.mapRowToEntity(row));
+  }
+
+  async markAgentNotified(ids: string[], notifiedAt?: string): Promise<void> {
+    if (ids.length === 0) return;
+    const timestamp = notifiedAt || new Date().toISOString();
+    const placeholders = ids.map(() => '?').join(', ');
+    await this.d1
+      .prepare(
+        `UPDATE appointments SET agent_notified_at = ? WHERE id IN (${placeholders})`,
+      )
+      .bind(timestamp, ...ids)
+      .run();
+  }
 }

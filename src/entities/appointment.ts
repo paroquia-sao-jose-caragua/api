@@ -38,6 +38,8 @@ export interface Appointment {
   requesterNotes: string | null;
   privatePastoralNotes: string | null;
   cancellationReason: string | null;
+  secretaryNotifiedAt?: string | null;
+  agentNotifiedAt?: string | null;
   createdAt?: string;
   updatedAt?: string | null;
 
