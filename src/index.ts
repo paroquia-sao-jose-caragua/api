@@ -22,6 +22,7 @@ import { donationsInfoRoutes } from './http/controllers/donations-info/routes';
 import { urgentAlertRoutes } from './http/controllers/urgent-alert/routes';
 import { appointmentsRoutes } from './http/controllers/appointments/routes';
 import { pushSubscriptionsRoutes } from './http/controllers/push-subscriptions/routes';
+import { siteVisitsRoutes } from './http/controllers/site-visits/routes';
 import { notFound } from './http/controllers/notFound';
 
 const app = new Hono<{ Bindings: Bindings; Variables: Variables }>({
@@ -50,6 +51,7 @@ app.route('/', donationsInfoRoutes);
 app.route('/', urgentAlertRoutes);
 app.route('/', appointmentsRoutes);
 app.route('/', pushSubscriptionsRoutes);
+app.route('/', siteVisitsRoutes);
 
 app.notFound(notFound);
 app.onError(onAppError);
