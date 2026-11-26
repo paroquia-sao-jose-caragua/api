@@ -35,4 +35,8 @@ export interface AppointmentsDAF {
     privateNotes?: string | null
   ): Promise<void>;
   cancelByToken(token: string, cancellationReason: string): Promise<void>;
+  findUnnotifiedForSecretary(): Promise<Appointment[]>;
+  markSecretaryNotified(ids: string[], notifiedAt?: string): Promise<void>;
+  findUnnotifiedConfirmedForAgents(): Promise<Appointment[]>;
+  markAgentNotified(ids: string[], notifiedAt?: string): Promise<void>;
 }

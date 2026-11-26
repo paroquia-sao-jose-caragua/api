@@ -18,6 +18,7 @@ export const createNotice: ControllerFn = async (c) => {
       try {
         const sendPushUseCase = makeSendPushNotificationUseCase(c);
         const pushPromise = sendPushUseCase.execute({
+          targetOrigin: 'site',
           payload: {
             title: notice.title,
             body: notice.summary || notice.description,

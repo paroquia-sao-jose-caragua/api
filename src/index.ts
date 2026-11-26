@@ -23,6 +23,7 @@ import { urgentAlertRoutes } from './http/controllers/urgent-alert/routes';
 import { appointmentsRoutes } from './http/controllers/appointments/routes';
 import { pushSubscriptionsRoutes } from './http/controllers/push-subscriptions/routes';
 import { siteVisitsRoutes } from './http/controllers/site-visits/routes';
+import { handleScheduledNotifications } from './scheduled/handle-appointment-digests';
 import { notFound } from './http/controllers/notFound';
 
 const app = new Hono<{ Bindings: Bindings; Variables: Variables }>({
@@ -56,5 +57,14 @@ app.route('/', siteVisitsRoutes);
 app.notFound(notFound);
 app.onError(onAppError);
 
-export default app;
+export default {
+  fetch: app.fetch,
+  async scheduled(
+    controller: ScheduledController,
+    env: Bindings,
+    ctx: ExecutionContext,
+  ) {
+    ctx.waitUntil(handleScheduledNotifications(controller, env));
+  },
+};
 
