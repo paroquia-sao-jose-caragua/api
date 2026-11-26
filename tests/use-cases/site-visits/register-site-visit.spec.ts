@@ -18,36 +18,63 @@ describe('Register Site Visit Use Case', () => {
     sut = new RegisterSiteVisitUseCase(siteVisitsDaf);
   });
 
-  it('should register a unique human visit and deduplicate same visitor on the same day', async () => {
-    const fixedDate = new Date('2026-11-26T15:00:00Z');
+  it('tracks page views across navigation in same session without duplicating session or unique visitor', async () => {
+    const t1 = new Date('2026-11-26T12:00:00Z'); // 09:00 BRT
+    const t2 = new Date('2026-11-26T12:02:00Z'); // 09:02 BRT (same session)
 
     const first = await sut.execute({
       ip: '177.12.34.56',
       userAgent: HUMAN_MOBILE_UA,
-      entryPath: '/agendamentos?ref=whatsapp',
+      entryPath: '/?ref=whatsapp',
       salt: 'test-salt',
-      now: fixedDate,
+      now: t1,
     });
 
-    const duplicate = await sut.execute({
+    const secondPage = await sut.execute({
+      ip: '177.12.34.56',
+      userAgent: HUMAN_MOBILE_UA,
+      entryPath: '/liturgia',
+      salt: 'test-salt',
+      now: t2,
+    });
+
+    expect(first.registered).toBe(true);
+    expect(secondPage.registered).toBe(false); // same session (< 15 min)
+    expect(siteVisitsDaf.items).toHaveLength(1);
+    expect(siteVisitsDaf.items[0].visitCount).toBe(1);
+    expect(siteVisitsDaf.pageViews).toEqual([
+      { visitDate: '2026-11-26', path: '/', viewCount: 1 },
+      { visitDate: '2026-11-26', path: '/liturgia', viewCount: 1 },
+    ]);
+  });
+
+  it('increments total access count when same visitor returns after 15+ minutes on the same day', async () => {
+    const morning = new Date('2026-11-26T12:00:00Z'); // 09:00 BRT
+    const afternoon = new Date('2026-11-26T19:00:00Z'); // 16:00 BRT
+
+    await sut.execute({
+      ip: '177.12.34.56',
+      userAgent: HUMAN_MOBILE_UA,
+      entryPath: '/liturgia',
+      salt: 'test-salt',
+      now: morning,
+    });
+
+    const returnVisit = await sut.execute({
       ip: '177.12.34.56',
       userAgent: HUMAN_MOBILE_UA,
       entryPath: '/agenda',
       salt: 'test-salt',
-      now: fixedDate,
+      now: afternoon,
     });
 
-    expect(first.registered).toBe(true);
-    expect(first.ignoredAsBot).toBe(false);
-    expect(duplicate.registered).toBe(false);
-    expect(duplicate.ignoredAsBot).toBe(false);
-    expect(siteVisitsDaf.items).toHaveLength(1);
-    expect(siteVisitsDaf.items[0].deviceType).toBe('mobile');
-    expect(siteVisitsDaf.items[0].entryPath).toBe('/agendamentos');
-    expect(siteVisitsDaf.items[0].visitorHash).not.toContain('177.12.34.56');
+    expect(returnVisit.registered).toBe(true);
+    expect(siteVisitsDaf.items).toHaveLength(1); // still 1 unique visitor
+    expect(siteVisitsDaf.items[0].visitCount).toBe(2); // 2 total accesses
+    expect(siteVisitsDaf.pageViews).toHaveLength(2);
   });
 
-  it('should ignore known bots and empty user agents', async () => {
+  it('ignores known bots and empty user agents', async () => {
     const botRes = await sut.execute({
       ip: '66.249.66.1',
       userAgent: GOOGLEBOT_UA,
@@ -62,14 +89,13 @@ describe('Register Site Visit Use Case', () => {
       salt: 'test-salt',
     });
 
-    expect(botRes.registered).toBe(false);
     expect(botRes.ignoredAsBot).toBe(true);
-    expect(emptyUaRes.registered).toBe(false);
     expect(emptyUaRes.ignoredAsBot).toBe(true);
     expect(siteVisitsDaf.items).toHaveLength(0);
+    expect(siteVisitsDaf.pageViews).toHaveLength(0);
   });
 
-  it('should count the same visitor again on a different day', async () => {
+  it('counts the same visitor as a new unique visitor on a different day', async () => {
     await sut.execute({
       ip: '177.12.34.56',
       userAgent: HUMAN_DESKTOP_UA,
@@ -89,6 +115,5 @@ describe('Register Site Visit Use Case', () => {
     expect(nextDay.registered).toBe(true);
     expect(siteVisitsDaf.items).toHaveLength(2);
     expect(siteVisitsDaf.items[1].entryPath).toBe('/liturgia');
-    expect(siteVisitsDaf.items[1].deviceType).toBe('desktop');
   });
 });

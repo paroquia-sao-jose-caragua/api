@@ -6,12 +6,17 @@ export interface SiteVisit {
   visitorHash: string; // Anonymous SHA-256 hash
   deviceType: SiteVisitDeviceType;
   entryPath: string;
+  visitCount: number;
+  lastVisitAt: string;
   createdAt: string;
 }
 
 export interface DailyVisitCount {
   date: string; // YYYY-MM-DD
-  count: number;
+  count: number; // unique visitors (backwards-compatible)
+  uniqueCount: number;
+  totalCount: number; // total sessions / accesses
+  pageViews: number;
 }
 
 export interface TopEntryPath {
@@ -30,6 +35,14 @@ export interface SiteVisitStats {
   last7DaysCount: number;
   currentMonthCount: number;
   totalCount: number;
+  todayAccessCount: number;
+  last7DaysAccessCount: number;
+  currentMonthAccessCount: number;
+  totalAccessCount: number;
+  todayPageViews: number;
+  last7DaysPageViews: number;
+  currentMonthPageViews: number;
+  totalPageViews: number;
   periodDays: number;
   dailySeries: DailyVisitCount[];
   deviceBreakdown: DeviceBreakdown;

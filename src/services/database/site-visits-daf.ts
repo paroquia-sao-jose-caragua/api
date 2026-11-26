@@ -9,6 +9,8 @@ export interface RegisterSiteVisitRecord {
   visitorHash: string;
   deviceType: SiteVisit['deviceType'];
   entryPath: string;
+  visitedAt: string;
+  sessionWindowStart: string;
 }
 
 export interface GetSiteVisitStatsQuery {
