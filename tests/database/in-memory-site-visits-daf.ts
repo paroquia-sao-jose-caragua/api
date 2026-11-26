@@ -29,72 +29,121 @@ function buildDateSeries(periodStart: string, periodDays: number): string[] {
 
 export class InMemorySiteVisitsDAF implements SiteVisitsDAF {
   public items: SiteVisit[] = [];
+  public pageViews: { visitDate: string; path: string; viewCount: number }[] = [];
 
   async registerVisit(
     data: RegisterSiteVisitRecord,
   ): Promise<{ inserted: boolean }> {
-    const exists = this.items.some(
+    const existing = this.items.find(
       (item) =>
         item.visitDate === data.visitDate &&
         item.visitorHash === data.visitorHash,
     );
 
-    if (exists) {
-      return { inserted: false };
+    let inserted = false;
+
+    if (!existing) {
+      this.items.push({
+        id: data.id,
+        visitDate: data.visitDate,
+        visitorHash: data.visitorHash,
+        deviceType: data.deviceType,
+        entryPath: data.entryPath,
+        visitCount: 1,
+        lastVisitAt: data.visitedAt,
+        createdAt: data.visitedAt,
+      });
+      inserted = true;
+    } else if (
+      !existing.lastVisitAt ||
+      existing.lastVisitAt <= data.sessionWindowStart
+    ) {
+      existing.visitCount += 1;
+      existing.lastVisitAt = data.visitedAt;
+      inserted = true;
     }
 
-    this.items.push({
-      ...data,
-      createdAt: new Date().toISOString(),
-    });
+    const pv = this.pageViews.find(
+      (p) => p.visitDate === data.visitDate && p.path === data.entryPath,
+    );
+    if (pv) {
+      pv.viewCount += 1;
+    } else {
+      this.pageViews.push({
+        visitDate: data.visitDate,
+        path: data.entryPath,
+        viewCount: 1,
+      });
+    }
 
-    return { inserted: true };
+    return { inserted };
   }
 
   async getStats(query: GetSiteVisitStatsQuery): Promise<SiteVisitStats> {
-    const todayCount = this.items.filter(
-      (item) => item.visitDate === query.today,
-    ).length;
+    const sumAccess = (list: SiteVisit[]) =>
+      list.reduce((acc, item) => acc + item.visitCount, 0);
+    const sumPv = (list: { viewCount: number }[]) =>
+      list.reduce((acc, item) => acc + item.viewCount, 0);
 
-    const last7DaysCount = this.items.filter(
-      (item) =>
-        item.visitDate >= query.last7DaysStart &&
-        item.visitDate <= query.today,
-    ).length;
-
-    const currentMonthCount = this.items.filter(
-      (item) =>
-        item.visitDate >= query.monthStart && item.visitDate <= query.today,
-    ).length;
-
-    const totalCount = this.items.length;
-
-    const inPeriod = this.items.filter(
-      (item) =>
-        item.visitDate >= query.periodStart && item.visitDate <= query.today,
+    const todayItems = this.items.filter((i) => i.visitDate === query.today);
+    const last7Items = this.items.filter(
+      (i) => i.visitDate >= query.last7DaysStart && i.visitDate <= query.today,
+    );
+    const monthItems = this.items.filter(
+      (i) => i.visitDate >= query.monthStart && i.visitDate <= query.today,
     );
 
-    const dailyMap = new Map<string, number>();
+    const todayPv = this.pageViews.filter((p) => p.visitDate === query.today);
+    const last7Pv = this.pageViews.filter(
+      (p) => p.visitDate >= query.last7DaysStart && p.visitDate <= query.today,
+    );
+    const monthPv = this.pageViews.filter(
+      (p) => p.visitDate >= query.monthStart && p.visitDate <= query.today,
+    );
+
+    const inPeriod = this.items.filter(
+      (i) => i.visitDate >= query.periodStart && i.visitDate <= query.today,
+    );
+    const pvInPeriod = this.pageViews.filter(
+      (p) => p.visitDate >= query.periodStart && p.visitDate <= query.today,
+    );
+
+    const dailyVisitsMap = new Map<string, { unique: number; access: number }>();
     const deviceBreakdown: DeviceBreakdown = {
       mobile: 0,
       desktop: 0,
       tablet: 0,
     };
-    const pathMap = new Map<string, number>();
 
     for (const item of inPeriod) {
-      dailyMap.set(item.visitDate, (dailyMap.get(item.visitDate) ?? 0) + 1);
-      deviceBreakdown[item.deviceType] += 1;
-      pathMap.set(item.entryPath, (pathMap.get(item.entryPath) ?? 0) + 1);
+      const curr = dailyVisitsMap.get(item.visitDate) ?? { unique: 0, access: 0 };
+      curr.unique += 1;
+      curr.access += item.visitCount;
+      dailyVisitsMap.set(item.visitDate, curr);
+      deviceBreakdown[item.deviceType] += item.visitCount;
+    }
+
+    const dailyPvMap = new Map<string, number>();
+    const pathMap = new Map<string, number>();
+    for (const pv of pvInPeriod) {
+      dailyPvMap.set(pv.visitDate, (dailyPvMap.get(pv.visitDate) ?? 0) + pv.viewCount);
+      pathMap.set(pv.path, (pathMap.get(pv.path) ?? 0) + pv.viewCount);
     }
 
     const dailySeries: DailyVisitCount[] = buildDateSeries(
       query.periodStart,
       query.periodDays,
-    ).map((date) => ({
-      date,
-      count: dailyMap.get(date) ?? 0,
-    }));
+    ).map((date) => {
+      const v = dailyVisitsMap.get(date) ?? { unique: 0, access: 0 };
+      const pv = dailyPvMap.get(date) ?? 0;
+      return {
+        date,
+        count: v.unique,
+        uniqueCount: v.unique,
+        totalCount: v.access,
+        pageViews: pv,
+      };
+    });
 
     const topPaths: TopEntryPath[] = Array.from(pathMap.entries())
       .map(([path, count]) => ({ path, count }))
@@ -102,10 +151,18 @@ export class InMemorySiteVisitsDAF implements SiteVisitsDAF {
       .slice(0, 8);
 
     return {
-      todayCount,
-      last7DaysCount,
-      currentMonthCount,
-      totalCount,
+      todayCount: todayItems.length,
+      last7DaysCount: last7Items.length,
+      currentMonthCount: monthItems.length,
+      totalCount: this.items.length,
+      todayAccessCount: sumAccess(todayItems),
+      last7DaysAccessCount: sumAccess(last7Items),
+      currentMonthAccessCount: sumAccess(monthItems),
+      totalAccessCount: sumAccess(this.items),
+      todayPageViews: sumPv(todayPv),
+      last7DaysPageViews: sumPv(last7Pv),
+      currentMonthPageViews: sumPv(monthPv),
+      totalPageViews: sumPv(this.pageViews),
       periodDays: query.periodDays,
       dailySeries,
       deviceBreakdown,

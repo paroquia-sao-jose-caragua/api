@@ -67,7 +67,8 @@ export class RegisterSiteVisitUseCase {
   async execute(
     request: RegisterSiteVisitRequest,
   ): Promise<RegisterSiteVisitResponse> {
-    const visitDate = getSaoPauloDateString(request.now ?? new Date());
+    const now = request.now ?? new Date();
+    const visitDate = getSaoPauloDateString(now);
     const userAgent = (request.userAgent || '').trim();
 
     if (!userAgent || isbot(userAgent)) {
@@ -86,6 +87,10 @@ export class RegisterSiteVisitUseCase {
 
     const deviceType = detectDeviceType(userAgent);
     const entryPath = normalizeEntryPath(request.entryPath);
+    const visitedAt = now.toISOString();
+    const sessionWindowStart = new Date(
+      now.getTime() - 15 * 60 * 1000,
+    ).toISOString();
 
     const { inserted } = await this.siteVisitsDaf.registerVisit({
       id: ulid(),
@@ -93,6 +98,8 @@ export class RegisterSiteVisitUseCase {
       visitorHash,
       deviceType,
       entryPath,
+      visitedAt,
+      sessionWindowStart,
     });
 
     return {
